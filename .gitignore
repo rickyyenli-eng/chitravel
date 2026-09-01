@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# 金鑰：.env 與所有變體都不進版控，只留範本
+.env
+.env.*
+!.env.example
+
+# 打包檔
+*.zip
