@@ -104,6 +104,29 @@ textarea{resize:vertical;min-height:60px}
 .chip:hover{border-color:var(--rail)}
 .chip input{position:absolute;opacity:0;width:0;height:0}
 .chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:500}
+/* 地點自動完成 */
+.ac{position:relative}
+.ac-list{
+  position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  box-shadow:var(--shadow);overflow:hidden;max-height:270px;overflow-y:auto;
+}
+.ac-list[hidden]{display:none}
+.ac-item{
+  display:block;width:100%;text-align:left;background:none;border:none;
+  padding:9px 12px;border-bottom:1px solid var(--line);line-height:1.4;
+}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item.sel{background:var(--accent-soft)}
+.ac-item .m{font-size:14px;font-weight:500;display:block}
+.ac-item .s{font-size:12px;color:var(--muted);display:block;margin-top:1px}
+.ac-note{padding:9px 12px;font-size:12.5px;color:var(--muted)}
+.locbtn{
+  align-self:flex-start;background:none;border:none;padding:2px 0;margin-top:2px;
+  font-size:12.5px;color:var(--info);text-decoration:underline;text-underline-offset:3px;
+}
+.locbtn:disabled{opacity:.55;cursor:default;text-decoration:none}
+
 .hintlinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
 .hintlinks button{
   background:none;border:none;padding:2px 0;font-size:12.5px;color:var(--info);
@@ -313,11 +336,12 @@ textarea{resize:vertical;min-height:60px}
       <div class="duo">
         <div class="field">
           <label for="from">出發地</label>
-          <input type="text" id="from" value="台中高鐵站">
+          <div class="ac"><input type="text" id="from" value="台中高鐵站" autocomplete="off"></div>
+          <button type="button" class="locbtn" id="locBtn">用我現在的位置</button>
         </div>
         <div class="field">
           <label for="to">目的地</label>
-          <input type="text" id="to" value="台北">
+          <div class="ac"><input type="text" id="to" value="台北" autocomplete="off"></div>
         </div>
       </div>
 
@@ -524,6 +548,124 @@ textarea{resize:vertical;min-height:60px}
     if (!chipValues(document.getElementById("transport")).length){
       boxes[2].checked = true; boxes[2].parentNode.classList.add("on");
     }
+  });
+
+  /* ---------- 地點自動完成 ---------- */
+
+  var acAvailable = true; // 後端說沒設定 Google 金鑰就關掉，退回純文字輸入
+
+  function newSession(){
+    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  function attachAutocomplete(input){
+    var box = document.createElement("div");
+    box.className = "ac-list";
+    box.hidden = true;
+    input.parentNode.appendChild(box);
+
+    var items = [], sel = -1, session = newSession(), timer = null, ctl = null;
+
+    function close(){ box.hidden = true; items = []; sel = -1; }
+
+    function paint(){
+      if (!items.length) return close();
+      box.innerHTML = items.map(function(it, i){
+        return '<button type="button" class="ac-item' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">' +
+               '<span class="m">' + esc(it.main) + '</span>' +
+               (it.secondary ? '<span class="s">' + esc(it.secondary) + '</span>' : '') +
+               '</button>';
+      }).join("");
+      box.hidden = false;
+    }
+
+    function choose(i){
+      var it = items[i];
+      if (!it) return;
+      // 填 main 就好 —— 「台中高鐵站」比「台灣台中市烏日區高鐵東一路8號」好讀，
+      // 而且模型本來就認得站名
+      input.value = it.main;
+      session = newSession(); // 選定即結束一個計價 session
+      close();
+    }
+
+    function fetchNow(){
+      var q = input.value.trim();
+      if (!acAvailable || q.length < 2) return close();
+      if (ctl) ctl.abort();
+      ctl = new AbortController();
+      fetch("/api/places?q=" + encodeURIComponent(q) + "&session=" + encodeURIComponent(session),
+            {signal: ctl.signal})
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          if (j.code === "no_google"){ acAvailable = false; return close(); }
+          items = j.suggestions || [];
+          sel = -1;
+          paint();
+        })
+        .catch(function(){ /* 中止或連線問題：安靜關掉，別擋住打字 */ });
+    }
+
+    input.addEventListener("input", function(){
+      clearTimeout(timer);
+      // 每個字都打一次 Google 太浪費，等使用者停一下再問
+      timer = setTimeout(fetchNow, 260);
+    });
+
+    input.addEventListener("keydown", function(e){
+      if (box.hidden || !items.length) return;
+      if (e.key === "ArrowDown"){ e.preventDefault(); sel = (sel + 1) % items.length; paint(); }
+      else if (e.key === "ArrowUp"){ e.preventDefault(); sel = (sel - 1 + items.length) % items.length; paint(); }
+      else if (e.key === "Enter" && sel >= 0){ e.preventDefault(); choose(sel); }
+      else if (e.key === "Escape"){ close(); }
+    });
+
+    box.addEventListener("mousedown", function(e){
+      // mousedown 而非 click：blur 會先把選單關掉
+      var btn = e.target.closest("[data-i]");
+      if (btn){ e.preventDefault(); choose(Number(btn.dataset.i)); }
+    });
+
+    input.addEventListener("blur", function(){ setTimeout(close, 120); });
+  }
+
+  attachAutocomplete(document.getElementById("from"));
+  attachAutocomplete(document.getElementById("to"));
+
+  /* ---------- 用我現在的位置 ---------- */
+
+  document.getElementById("locBtn").addEventListener("click", function(){
+    var btn = this;
+    var fromInput = document.getElementById("from");
+
+    if (!navigator.geolocation){
+      btn.textContent = "這個瀏覽器不支援定位";
+      btn.disabled = true;
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "定位中…";
+
+    navigator.geolocation.getCurrentPosition(function(pos){
+      fetch("/api/whereami?lat=" + pos.coords.latitude + "&lng=" + pos.coords.longitude)
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          if (j.ok && j.name){
+            fromInput.value = j.name;
+            btn.textContent = "已填入目前位置";
+          } else {
+            btn.textContent = j.code === "no_google" ? "伺服器未設定地圖金鑰" : "查不到你在哪，手動填吧";
+          }
+        })
+        .catch(function(){ btn.textContent = "查詢失敗，手動填吧"; })
+        .then(function(){
+          setTimeout(function(){ btn.disabled = false; btn.textContent = "用我現在的位置"; }, 2600);
+        });
+    }, function(err){
+      btn.textContent = err.code === 1 ? "你拒絕了定位權限" : "拿不到位置，手動填吧";
+      setTimeout(function(){ btn.disabled = false; btn.textContent = "用我現在的位置"; }, 2600);
+    }, {timeout: 9000, maximumAge: 60000});
   });
 
   function readForm(){

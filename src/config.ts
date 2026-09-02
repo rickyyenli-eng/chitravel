@@ -14,11 +14,15 @@ export const config = {
   workspaceId: process.env.ANTHROPIC_WORKSPACE_ID ?? "",
   /** Tavily 搜尋金鑰。沒填就跳過查證，行程照常出得來 */
   tavilyKey: process.env.TAVILY_API_KEY ?? "",
+  /** Google Maps 金鑰：地點自動完成與定位反查。沒填就退回純文字輸入 */
+  googleKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
   plannerModel: process.env.PLANNER_MODEL ?? "claude-sonnet-4-5",
   extractModel: process.env.EXTRACT_MODEL ?? "claude-haiku-4-5",
   /** MOCK_PLAN=1：用假資料走完整條串流，不呼叫模型、不花錢 */
   mockPlan: process.env.MOCK_PLAN === "1",
   rateLimitPerMin: num("RATE_LIMIT_PER_MIN", 6),
+  /** 自動完成每打一個字問一次，額度要寬鬆得多 */
+  placesRateLimitPerMin: num("PLACES_RATE_LIMIT_PER_MIN", 60),
   cacheTtlSeconds: num("CACHE_TTL_SECONDS", 600),
 } as const;
 

@@ -178,6 +178,23 @@ scripts/
 > 之後要做分潤，在 Booking 網址加上 `&aid=<你的聯盟編號>` 即可，使用者體驗完全不變。
 > 這大概是這個產品最自然的第一條變現路徑。
 
+### `GET /api/places?q=&session=`
+
+地點自動完成，**代理** Google Places API (New)。金鑰只在後端用，不會出現在網頁原始碼裡。
+只回台灣的地點（`includedRegionCodes: ["tw"]`），語言 `zh-TW`。
+
+回 `{ok, suggestions:[{main, secondary, text}]}`。選定時填的是 `main`（「台中高鐵站」），
+不是完整門牌 —— 好讀，而且模型本來就認得站名。
+
+前端每打一個字停 260ms 才問一次，並帶 `session` token 讓 Google 以 session 計價。
+沒設定 `GOOGLE_MAPS_API_KEY` 時回 `code: "no_google"`，前端據此關掉下拉、退回純文字輸入 ——
+**這條路徑一定要能走，不能因為沒有金鑰就整頁壞掉。**
+
+### `GET /api/whereami?lat=&lng=`
+
+把瀏覽器拿到的經緯度反查成「市 + 區」。回傳刻意不給完整門牌 ——
+行程規劃用得上的是「台南市中西區」這種粒度。
+
 ### `GET /healthz`
 
 回 `{ ok, model }`，前端右上角那行字就是讀這個。

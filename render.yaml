@@ -20,6 +20,8 @@ services:
         sync: false
       - key: TAVILY_API_KEY
         sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
 
       - key: PLANNER_MODEL
         value: claude-sonnet-4-5
@@ -31,3 +33,5 @@ services:
         value: "3"
       - key: CACHE_TTL_SECONDS
         value: "900"
+      - key: PLACES_RATE_LIMIT_PER_MIN
+        value: "60"
