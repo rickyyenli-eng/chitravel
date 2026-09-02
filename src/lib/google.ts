@@ -91,9 +91,13 @@ export async function reverseGeocode(
   };
   if (json.status !== "OK" || !json.results?.length) return "";
 
-  // 掃過所有結果找「城市 + 行政區」；行程規劃用得到的是這個粒度，不是門牌號碼
+  // 台灣的層級對應：level_1 = 臺北市／南投縣，level_2 = 中正區／南投市，level_3 = 里。
+  // 行程用得上的是「市 + 區」，抓到「里」就太細了 —— 所以 level_2 優先，
+  // 沒有才退而求其次用 level_3。
   let city = "";
   let district = "";
+  let village = "";
+
   for (const r of json.results) {
     for (const c of r.address_components ?? []) {
       const types = c.types ?? [];
@@ -102,16 +106,13 @@ export async function reverseGeocode(
       if (!city && (types.includes("administrative_area_level_1") || types.includes("locality"))) {
         city = name;
       }
-      if (
-        !district &&
-        (types.includes("administrative_area_level_3") ||
-          types.includes("administrative_area_level_2"))
-      ) {
-        district = name;
-      }
+      if (!district && types.includes("administrative_area_level_2")) district = name;
+      if (!village && types.includes("administrative_area_level_3")) village = name;
     }
     if (city && district) break;
   }
+
+  if (!district) district = village;
 
   if (city && district) return district.startsWith(city) ? district : `${city}${district}`;
   return city || district || (json.results[0]?.formatted_address ?? "");
