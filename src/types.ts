@@ -6,6 +6,7 @@ import { z } from "zod";
  */
 
 export const StopKind = z.enum(["transit", "food", "sight", "stay", "other"]);
+/** 每晚 = 每人每晚（住宿已按人數分攤過），這樣加總才不用猜一間房住幾個人 */
 export const CostUnit = z.enum(["每人", "每組", "每晚"]);
 
 /**
@@ -22,6 +23,8 @@ export const PlanRequestSchema = z.object({
   to: z.string().trim().min(1).max(60),
   food: z.string().trim().max(60).default(""),
   date: z.string().trim().max(20).default(""),
+  /** 幾天。1 = 當日來回，2 = 兩天一夜，依此類推 */
+  days: z.coerce.number().int().min(1).max(3).default(1),
   start: z.string().trim().max(10).default("09:00"),
   people: z.coerce.number().int().min(1).max(20).default(2),
   budget: z.coerce.number().int().min(0).max(1_000_000).default(0),
@@ -39,6 +42,8 @@ export type PlanRequest = z.infer<typeof PlanRequestSchema>;
 export const StopSchema = z.object({
   kind: StopKind.catch("other"),
   name: z.string().catch("未命名"),
+  /** 第幾天，從 1 開始。當日來回全部都是 1 */
+  day: z.coerce.number().int().min(1).catch(1),
   time: z.string().catch(""),
   duration: z.string().catch(""),
   howTo: z.string().catch(""),

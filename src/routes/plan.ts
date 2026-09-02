@@ -46,7 +46,7 @@ planRoute.post("/plan", async (c) => {
     const res = await ask({
       system: SYSTEM_PROMPT,
       prompt: buildPlanPrompt(form),
-      maxTokens: 6000,
+      maxTokens: 6000 + (form.days - 1) * 4500,
       prefill: "{",
     });
 
@@ -169,7 +169,8 @@ planRoute.post("/plan/stream", async (c) => {
       const res = await askStream({
         system: SYSTEM_PROMPT,
         prompt: buildPlanPrompt(form),
-        maxTokens: 6000,
+        // 多天行程要寫的東西多很多，額度不夠會被硬生生截斷
+        maxTokens: 6000 + (form.days - 1) * 4500,
         prefill: "{",
         onText: (delta) => parser.push(delta),
       });

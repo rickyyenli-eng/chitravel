@@ -18,8 +18,10 @@ const VERIFY_SYSTEM = [
  * 三道防線確保候選既真實、又在對的地方：
  * 1. 抽取提示只給搜尋結果與編號，模型回傳編號，網址由這邊對回去 —— 模型碰不到網址。
  * 2. 回來的名稱必須逐字出現在搜尋結果原文裡，否則丟掉。
- * 3. 地區必須對得上這一站的 area，否則丟掉 —— 搜尋常常回「全市懶人包」，
- *    裡面的店散落各區，不濾掉會害使用者走冤枉路。
+ * 3. 地區要對得上這一站的 area —— 搜尋常常回「全市懶人包」，裡面的店散落各區。
+ *    但這一關只擋「明講了地區、而且地區不對」的，沒寫地區的放行：
+ *    實測全擋會把命中率從七成打到一成，真正在那一區、只是文章沒寫區名的
+ *    店家全被誤殺。地區約束改成寫進抽取指示，讓它一開始就別挑外區的。
  */
 export async function verifyStop(
   form: PlanRequest,
@@ -42,6 +44,7 @@ export async function verifyStop(
   const prompt = [
     `以下是「${form.to} ${area} ${stop.name}」的搜尋結果。`,
     `使用者的條件：${needs}。`,
+    area ? `只挑位於「${area}」或走路可到的店家；明顯在其他區的，就算結果裡有寫也不要放進來。` : "",
     "",
     corpus,
     "",
@@ -50,11 +53,12 @@ export async function verifyStop(
     "",
     "規則：",
     "1. name 必須逐字出現在上面的搜尋結果裡，不可以改寫、簡化或自己組合。",
-    "2. district 只能填搜尋結果裡讀得到的地區；讀不到就填空字串，不要用猜的。",
+    "2. district 只能填搜尋結果裡讀得到的地區；讀不到就填空字串，不要用猜的",
+    "   （填空字串可以，但前提是你已經確認它不在別區）。",
     "3. source 是引用的結果編號（上面的方括號數字）。",
     "4. note 只能寫結果裡讀得到的資訊。",
     "5. 找不到明確的店名就回 []。這是可以接受的答案。",
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 
   const res = await ask({
     system: VERIFY_SYSTEM,
@@ -83,8 +87,11 @@ export async function verifyStop(
     const district = String(o.district ?? "").trim();
     const note = String(o.note ?? "").trim();
 
-    // 防線三：地區對不上就丟掉
-    if (token && !`${district} ${note} ${name}`.includes(token)) continue;
+    // 防線三：只擋「明講了地區、而且地區不對」的。
+    // 沒寫地區的放行，交給抽取指示把關 —— 全擋會誤殺大量真的在那一區的店。
+    const said = `${district} ${note}`;
+    const mentionsSomeDistrict = /[\u4e00-\u9fa5]{2}(區|鄉|鎮)/.test(said);
+    if (token && mentionsSomeDistrict && !`${district} ${note} ${name}`.includes(token)) continue;
 
     const idx = Number(o.source);
     const src = Number.isInteger(idx) ? results[idx - 1] : undefined;

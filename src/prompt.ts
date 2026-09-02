@@ -20,6 +20,7 @@ const SHAPE = JSON.stringify({
     {
       kind: "transit|food|sight|stay|other",
       name: "名稱",
+      day: 1,
       time: "09:30",
       duration: "約 40 分鐘",
       howTo: "怎麼過去：搭哪條線、在哪站下、幾號出口、步行幾分鐘",
@@ -48,6 +49,7 @@ export function buildPlanPrompt(f: PlanRequest): string {
     `目的地：${f.to}`,
     `想吃：${f.food || "在地美食"}`,
     `日期：${f.date || "近期"}`,
+    `天數：${f.days === 1 ? "當日來回" : `${f.days} 天 ${f.days - 1} 夜`}`,
     `出發時間：${f.start}`,
     `人數：${f.people} 人`,
     `每人預算：NT$${f.budget}`,
@@ -77,5 +79,17 @@ export function buildPlanPrompt(f: PlanRequest): string {
     "10. 交通段（kind:transit）的 verified 一律填 landmark。",
     "11. 非交通的 stop 都要填 area，寫最小可辨識的地理範圍（行政區、商圈或老街名），",
     "    不要只寫城市名。這欄會用來把跑錯區的搜尋結果濾掉。",
+    ...(f.days > 1
+      ? [
+          `12. 這是 ${f.days} 天 ${f.days - 1} 夜的行程，每個 stop 都要填 day（第幾天，1 起算）。`,
+          "    每一天都要照時間排好，跨日時 day 加一、時間回到早上。",
+          `13. 必須安排 ${f.days - 1} 晚住宿，用 kind:"stay"，排在該天最後一個 stop。`,
+          "    detail 寫早鳥價與是否供應早餐，area 寫住宿所在的行政區。",
+          "    住宿要選在隔天行程的起點附近，不要讓人早上先花一小時通勤。",
+          "14. 隔天的第一個 stop 通常是早餐或退房；含早餐的住宿就不要再排一頓早餐。",
+          "15. 回程交通排在最後一天的最後。中間幾天不要出現回出發地的交通。",
+          "16. costUnit 用「每晚」時，金額請寫每人每晚（先按人數分攤過），加總才不會錯。",
+        ]
+      : ["12. 這是當日來回，所有 stop 的 day 都填 1，不要安排住宿。"]),
   ].join("\n");
 }

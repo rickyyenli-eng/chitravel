@@ -9,6 +9,7 @@ export const MOCK_TRIP_JSON = JSON.stringify({
   stops: [
     {
       kind: "transit",
+      day: 1,
       verified: "landmark",
       name: "高鐵 台中→台北",
       time: "09:00",
@@ -20,6 +21,7 @@ export const MOCK_TRIP_JSON = JSON.stringify({
     },
     {
       kind: "transit",
+      day: 1,
       verified: "landmark",
       name: "捷運 台北車站→中山站",
       time: "10:15",
@@ -30,6 +32,7 @@ export const MOCK_TRIP_JSON = JSON.stringify({
     },
     {
       kind: "food",
+      day: 1,
       name: "中山站周邊義式餐酒館（示範）",
       area: "中山區",
       verified: "generic",
@@ -46,6 +49,7 @@ export const MOCK_TRIP_JSON = JSON.stringify({
     },
     {
       kind: "sight",
+      day: 1,
       name: "赤峰街巷弄（示範景點）",
       area: "大同區",
       verified: "landmark",
@@ -61,6 +65,7 @@ export const MOCK_TRIP_JSON = JSON.stringify({
     },
     {
       kind: "sight",
+      day: 1,
       name: "市立美術館（示範）",
       area: "中山區",
       verified: "unverified",
@@ -76,6 +81,7 @@ export const MOCK_TRIP_JSON = JSON.stringify({
     },
     {
       kind: "transit",
+      day: 1,
       verified: "landmark",
       name: "捷運＋高鐵 回台中",
       time: "18:00",

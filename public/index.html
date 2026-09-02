@@ -153,6 +153,17 @@ textarea{resize:vertical;min-height:60px}
 }
 .secttl::after{content:"";flex:1;height:1px;background:var(--line)}
 
+.dayline{
+  display:flex;align-items:center;gap:12px;margin:22px 0 12px;
+}
+.dayline:first-child{margin-top:0}
+.daytag{
+  flex:none;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;letter-spacing:.1em;
+  padding:4px 12px;border-radius:6px;background:var(--accent);color:var(--accent-ink);
+}
+.dayline .rule{flex:1;height:1px;background:var(--line)}
+.dayline .sub{font-size:12.5px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+
 /* timeline */
 .timeline{display:flex;flex-direction:column}
 .stop{display:grid;grid-template-columns:44px minmax(0,1fr);padding-bottom:14px}
@@ -320,13 +331,22 @@ textarea{resize:vertical;min-height:60px}
 
       <div class="duo">
         <div class="field">
+          <label for="days">天數</label>
+          <select id="days">
+            <option value="1">當日來回</option>
+            <option value="2">2 天 1 夜</option>
+            <option value="3">3 天 2 夜</option>
+          </select>
+        </div>
+        <div class="field">
           <label for="people">人數</label>
           <input type="number" id="people" value="2" min="1" max="20">
         </div>
-        <div class="field">
-          <label for="budget">每人預算 NT$</label>
-          <input type="number" id="budget" value="3000" min="0" step="100">
-        </div>
+      </div>
+
+      <div class="field">
+        <label for="budget">每人預算 NT$（整趟）</label>
+        <input type="number" id="budget" value="3000" min="0" step="100">
       </div>
 
       <div class="grp">
@@ -431,6 +451,17 @@ textarea{resize:vertical;min-height:60px}
     document.getElementById("date").value = d.toISOString().slice(0,10);
   })();
 
+  document.getElementById("days").addEventListener("change", function(){
+    var multi = Number(this.value) > 1;
+    var boxes = document.querySelectorAll("#include input");
+    for (var i = 0; i < boxes.length; i++){
+      if (boxes[i].value === "住宿" && multi && !boxes[i].checked){
+        boxes[i].checked = true;
+        boxes[i].parentNode.classList.add("on");
+      }
+    }
+  });
+
   document.getElementById("dice").addEventListener("click", function(){
     document.getElementById("from").value = pick(ORIGINS);
     document.getElementById("to").value = pick(CITIES);
@@ -453,6 +484,7 @@ textarea{resize:vertical;min-height:60px}
       to: document.getElementById("to").value.trim() || "台北",
       food: document.getElementById("food").value.trim() || "在地美食",
       date: document.getElementById("date").value,
+      days: parseInt(document.getElementById("days").value, 10) || 1,
       start: document.getElementById("start").value || "09:00",
       people: Math.max(1, parseInt(document.getElementById("people").value, 10) || 1),
       budget: Math.max(0, parseInt(document.getElementById("budget").value, 10) || 0),
@@ -468,6 +500,7 @@ textarea{resize:vertical;min-height:60px}
     return {
       id: "s" + i + "_" + Math.random().toString(36).slice(2, 6),
       kind: (s && KIND_LABEL[s.kind]) ? s.kind : "other",
+      day: Number(s && s.day) || 1,
       name: (s && s.name) || "未命名",
       time: (s && s.time) || "",
       duration: (s && s.duration) || "",
@@ -619,6 +652,7 @@ textarea{resize:vertical;min-height:60px}
     var tags = [
       f.from + " → " + f.to,
       f.date || "日期未定",
+      f.days > 1 ? (f.days + " 天 " + (f.days - 1) + " 夜") : "當日來回",
       f.people + " 人"
     ].concat(f.transport, f.needs);
 
@@ -643,7 +677,7 @@ textarea{resize:vertical;min-height:60px}
         '<div class="tags">' + tags.map(function(t){ return '<span class="tag">' + esc(t) + '</span>'; }).join("") + '</div>' +
       '</div>' +
       '<div class="secttl">路線</div>' +
-      '<div class="timeline">' + state.stops.map(renderStop).join("") +
+      '<div class="timeline">' + renderTimeline() +
         (state.streaming ? pendingRow() : "") + '</div>' +
       (state.extras.length
         ? '<div class="secttl">私房 / 備選　可加可不加</div><div class="extras">' + state.extras.map(renderExtra).join("") + '</div>'
@@ -653,6 +687,35 @@ textarea{resize:vertical;min-height:60px}
         : '');
 
     renderTotals();
+  }
+
+  /** 多天行程在每一天開頭插一條分隔；當日來回就不插，免得多一條沒用的線 */
+  function renderTimeline(){
+    var maxDay = 1;
+    state.stops.forEach(function(s){ if (s.day > maxDay) maxDay = s.day; });
+
+    var html = "", lastDay = 0;
+    state.stops.forEach(function(s){
+      if (maxDay > 1 && s.day !== lastDay){
+        lastDay = s.day;
+        var spend = dayCost(s.day);
+        html += '<div class="dayline"><span class="daytag">第 ' + s.day + ' 天</span>' +
+                '<span class="rule"></span>' +
+                (spend > 0 ? '<span class="sub">' + money(spend) + '</span>' : '') +
+                '</div>';
+      }
+      html += renderStop(s);
+    });
+    return html;
+  }
+
+  function dayCost(day){
+    var people = state.form.people, sum = 0;
+    state.stops.forEach(function(s){
+      if (s.off || s.day !== day) return;
+      sum += stopCostPerHead(s, people);
+    });
+    return sum;
   }
 
   function pendingRow(){
