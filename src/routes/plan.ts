@@ -181,7 +181,9 @@ planRoute.post("/plan/stream", async (c) => {
       // 只查模型自己說「沒指名」或「沒查證」的，地標與交通段不浪費搜尋費
       const targets = stops
         .map((s, i) => ({ s, i }))
-        .filter(({ s }) => s.kind !== "transit" && s.verified !== "landmark");
+        // 住宿不查：旅館結果幾乎都是動態產生的訂房網，抓回來是空殼。
+        // 前端改給帶好條件的訂房搜尋連結，這裡省下一次搜尋加一次萃取。
+        .filter(({ s }) => s.kind !== "transit" && s.kind !== "stay" && s.verified !== "landmark");
       const willVerify = config.tavilyKey ? targets.length : 0;
 
       if (trip.success && trip.data.stops.length > 0) {

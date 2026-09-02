@@ -221,6 +221,15 @@ textarea{resize:vertical;min-height:60px}
 .cand .n{font-weight:500}
 .cand .s{font-size:12px;color:var(--info);text-decoration:none;border-bottom:1px solid currentColor;white-space:nowrap;margin-left:4px}
 .cand .s:hover{opacity:.75}
+.book{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line)}
+.book .h{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--info);margin-bottom:8px}
+.book .row{display:flex;flex-wrap:wrap;gap:8px}
+.book a{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:8px;
+  border:1px solid var(--info);color:var(--info);text-decoration:none;font-size:13.5px;font-weight:500;
+}
+.book a:hover{background:var(--info-soft)}
+.book .why{margin-top:8px;font-size:12.5px;color:var(--muted);line-height:1.55}
 .checking{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-top:10px}
 .cfoot{display:flex;justify-content:flex-end;margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
 .mini{
@@ -419,6 +428,45 @@ textarea{resize:vertical;min-height:60px}
       .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
       .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
+  function pad2(n){ return (n < 10 ? "0" : "") + n; }
+
+  /** ISO 日期加 n 天。給空字串或壞值就回空字串，連結照樣能用，只是不帶日期 */
+  function addDays(iso, n){
+    if (!iso) return "";
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return "";
+    d.setDate(d.getDate() + n);
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+
+  /**
+   * 住宿不給店名，給一個「條件已經帶好」的訂房搜尋連結。
+   * 房價與空房每天在動，給一個可能已停業的旅館名字不如讓人去看即時的。
+   * （之後要做分潤，在 Booking 網址加上 &aid=你的聯盟編號即可，體驗不變。）
+   */
+  function bookingBlock(f, s){
+    if (s.kind !== "stay") return "";
+    var where = [f.to, s.area].filter(Boolean).join(" ");
+    var checkin = addDays(f.date, s.day - 1);
+    var checkout = addDays(f.date, s.day);
+
+    var booking = "https://www.booking.com/searchresults.zh-tw.html?ss=" + encodeURIComponent(where) +
+      (checkin ? "&checkin=" + checkin + "&checkout=" + checkout : "") +
+      "&group_adults=" + f.people + "&no_rooms=1&group_children=0";
+    var google = "https://www.google.com/travel/search?q=" + encodeURIComponent(where + " 住宿");
+
+    var when = checkin ? checkin + " 入住 · " + checkout + " 退房 · " : "";
+
+    return '<div class="book"><div class="h">查即時空房與房價</div>' +
+      '<div class="row">' +
+        '<a href="' + esc(booking) + '" target="_blank" rel="noopener">Booking.com</a>' +
+        '<a href="' + esc(google) + '" target="_blank" rel="noopener">Google 住宿</a>' +
+      '</div>' +
+      '<div class="why">' + esc(when + f.people + " 人 · 條件已經帶好") + '。' +
+      '上面那個金額只是估算 —— 房價與空房每天在動，早鳥價與是否含早餐都要看當下的頁面。</div>' +
+      '</div>';
+  }
+
   function money(n){ return "NT$" + Math.round(Number(n)||0).toLocaleString("en-US"); }
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 
@@ -582,7 +630,11 @@ textarea{resize:vertical;min-height:60px}
     }
 
     var cands = "";
-    if (s.checking){
+    if (s.kind === "stay"){
+      // 旅館的搜尋結果幾乎都是動態產生的訂房網，抓回來是空殼，抽不出可用店名。
+      // 與其顯示「沒查到」，不如直接給帶好條件的搜尋連結。
+      cands = bookingBlock(state.form, s);
+    } else if (s.checking){
       cands = '<div class="checking"><span class="pulse"></span>正在搜尋實際存在的店家…</div>';
     } else if (s.candidates && s.candidates.length){
       cands = '<div class="cands"><div class="h">查到這幾家，資料來自下列來源</div>' +
