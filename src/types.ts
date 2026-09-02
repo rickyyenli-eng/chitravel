@@ -44,6 +44,8 @@ export const StopSchema = z.object({
   howTo: z.string().catch(""),
   detail: z.string().catch(""),
   hours: z.string().catch(""),
+  /** 行政區或商圈，查證時用來把跑錯區的候選濾掉 */
+  area: z.string().catch(""),
   cost: z.coerce.number().catch(0),
   costUnit: CostUnit.catch("每人"),
   // 模型漏填時一律當成未查證，寧可多提醒一次

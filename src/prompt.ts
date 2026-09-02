@@ -25,6 +25,7 @@ const SHAPE = JSON.stringify({
       howTo: "怎麼過去：搭哪條線、在哪站下、幾號出口、步行幾分鐘",
       detail: "這站在做什麼、為什麼推薦",
       hours: "營業時間與公休日",
+      area: "行政區或商圈，例如 鹽埕區 / 旗津 / 五福商圈",
       cost: 350,
       costUnit: "每人",
       verified: "landmark|unverified|generic",
@@ -74,5 +75,7 @@ export function buildPlanPrompt(f: PlanRequest): string {
     "     detail 寫怎麼挑（看哪個招牌、避開什麼、大概多少錢），verified 填 generic。",
     "   - 真的要指名但沒有十足把握，照樣寫出來，但 verified 填 unverified。",
     "10. 交通段（kind:transit）的 verified 一律填 landmark。",
+    "11. 非交通的 stop 都要填 area，寫最小可辨識的地理範圍（行政區、商圈或老街名），",
+    "    不要只寫城市名。這欄會用來把跑錯區的搜尋結果濾掉。",
   ].join("\n");
 }

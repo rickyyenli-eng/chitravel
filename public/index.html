@@ -474,6 +474,7 @@ textarea{resize:vertical;min-height:60px}
       howTo: (s && s.howTo) || "",
       detail: (s && s.detail) || "",
       hours: (s && s.hours) || "",
+      area: (s && s.area) || "",
       cost: Number(s && s.cost) || 0,
       costUnit: (s && s.costUnit) || "每人",
       verified: (s && s.verified) || "unverified",
@@ -559,7 +560,9 @@ textarea{resize:vertical;min-height:60px}
                  '</span></div>';
         }).join("") + '</div>';
     } else if (s.candidates && s.candidates.length === 0){
-      cands = '<div class="cands none"><div class="h">搜尋沒有找到可靠的店家資料，到現場再挑</div></div>';
+      cands = '<div class="cands none"><div class="h">' +
+        (s.area ? esc(s.area) + '沒查到可靠的店家資料，到現場再挑' : '搜尋沒有找到可靠的店家資料，到現場再挑') +
+        '</div></div>';
     }
 
     var cost = s.cost > 0
@@ -568,6 +571,7 @@ textarea{resize:vertical;min-height:60px}
 
     var meta = [];
     if (s.duration) meta.push(s.duration);
+    if (s.area) meta.push(s.area);
     meta.push(KIND_LABEL[s.kind]);
 
     // 交通段不需要標；其餘照模型自評的可信度提醒

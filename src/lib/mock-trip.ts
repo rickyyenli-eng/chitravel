@@ -31,6 +31,7 @@ export const MOCK_TRIP_JSON = JSON.stringify({
     {
       kind: "food",
       name: "中山站周邊義式餐酒館（示範）",
+      area: "中山區",
       verified: "generic",
       time: "11:30",
       duration: "約 90 分鐘",
@@ -46,6 +47,7 @@ export const MOCK_TRIP_JSON = JSON.stringify({
     {
       kind: "sight",
       name: "赤峰街巷弄（示範景點）",
+      area: "大同區",
       verified: "landmark",
       time: "13:30",
       duration: "約 90 分鐘",
@@ -60,6 +62,7 @@ export const MOCK_TRIP_JSON = JSON.stringify({
     {
       kind: "sight",
       name: "市立美術館（示範）",
+      area: "中山區",
       verified: "unverified",
       time: "15:30",
       duration: "約 120 分鐘",
