@@ -1,0 +1,33 @@
+# Render 藍圖。在 Render 選 New → Blueprint，指向這個 repo 就會照這份設定建。
+services:
+  - type: web
+    name: shunlu
+    runtime: node
+    plan: free
+    region: singapore          # 離台灣最近
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+
+      # sync: false = Render 會在部署時問你，值不會進版控
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_WORKSPACE_ID
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+
+      - key: PLANNER_MODEL
+        value: claude-sonnet-4-5
+      - key: EXTRACT_MODEL
+        value: claude-haiku-4-5
+
+      # 公開網址上要保守一點：每個 IP 每分鐘 3 次，快取拉長到 15 分鐘
+      - key: RATE_LIMIT_PER_MIN
+        value: "3"
+      - key: CACHE_TTL_SECONDS
+        value: "900"

@@ -15,7 +15,7 @@ app.route("/api", planRoute);
 app.use("/*", serveStatic({ root: "./public" }));
 app.get("*", serveStatic({ path: "./public/index.html" }));
 
-serve({ fetch: app.fetch, port: config.port }, (info) => {
+serve({ fetch: app.fetch, port: config.port, hostname: "0.0.0.0" }, (info) => {
   console.log(`\n順路走 http://localhost:${info.port}`);
   console.log(`編排模型 ${config.plannerModel}`);
   console.log(`每分鐘上限 ${config.rateLimitPerMin} 次 · 快取 ${config.cacheTtlSeconds} 秒\n`);

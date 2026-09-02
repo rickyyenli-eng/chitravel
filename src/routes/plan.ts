@@ -98,13 +98,21 @@ planRoute.post("/plan/stream", async (c) => {
     };
 
     const pump = (async () => {
+      let lastWrite = Date.now();
       while (!finished || queue.length > 0) {
         const item = queue.shift();
         if (!item) {
+          // 心跳：雲端代理常在閒置一陣子後掐斷連線，而模型在寫出
+          // 第一段之前可能安靜好幾十秒。SSE 註解不會觸發前端的事件處理。
+          if (Date.now() - lastWrite > 15_000) {
+            await sse.write(": ping\n\n");
+            lastWrite = Date.now();
+          }
           await new Promise((r) => setTimeout(r, 25));
           continue;
         }
         await sse.writeSSE({ event: item.event, data: JSON.stringify(item.data) });
+        lastWrite = Date.now();
       }
     })();
 

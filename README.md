@@ -35,6 +35,40 @@ MOCK_PLAN=1 npm run dev
 
 ---
 
+## 部署到 Render
+
+repo 裡有 `render.yaml`，Render 會照它建，不用手動填一堆欄位。
+
+1. Render → **New → Blueprint**
+2. 選 `chitravel` 這個 repo
+3. Render 會問三個 secret（`sync: false` 的那些），把 `.env` 裡的值貼進去：
+   `ANTHROPIC_API_KEY`、`ANTHROPIC_WORKSPACE_ID`、`TAVILY_API_KEY`
+4. **Apply**
+
+其他設定藍圖裡都寫死了：新加坡機房（離台灣最近）、Node 22、
+健康檢查打 `/healthz`、推 commit 就自動重新部署。
+
+公開網址上兩個參數刻意調保守：每個 IP 每分鐘 **3 次**、快取 **15 分鐘**。
+一份行程約 NT$2，這兩個值決定有人亂按時你會賠多少。
+
+**免費方案會休眠。** 閒置 15 分鐘後停掉，下一個訪客要等 30–60 秒喚醒。
+給幾個人試夠用；要給不特定的人看就得升級。
+
+### 為什麼不是 GitHub Pages
+
+Pages 只能放靜態檔。這個專案的 `/api/plan` 要跑 Node，而且金鑰**必須**留在
+伺服器端 —— 放到前端等於把信用卡貼在原始碼上。
+
+### 為什麼還沒上 Cloudflare Workers
+
+Hono 本來就是為 Workers 寫的，但免費方案每個請求只有 **10 毫秒 CPU**，
+而串流解析器掃一份 16KB 的回應大約要 20–80 毫秒，會被砍掉。
+付費方案（$5/月）有 30 秒 CPU，綽綽有餘。
+另外 `process.env`、`node:crypto`、記憶體快取與頻率限制都要改成 Workers 的寫法，
+大約兩三小時的工。等確定有人要用再搬。
+
+---
+
 ## 目錄
 
 ```
