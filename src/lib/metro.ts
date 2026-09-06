@@ -64,6 +64,28 @@ export function promptIndex(dest: string): string {
   ].join("\n");
 }
 
+/**
+ * 站名後面要真的接著「站」之類的字，才算這段話在講那個車站。
+ *
+ * 「松山文創園區」裡有「松山」，但那是園區不是車站；只用 includes 比對
+ * 會把它當成行程站，然後跳出一個假警告。這是線上抓到的第二種同類錯誤
+ * （第一種是路線名「中和新蘆線」裡的「中和」）。
+ *
+ * 代價是模型寫「搭板南線到西門」這種沒帶「站」的句子會漏檢 ——
+ * 漏報可以接受，誤報不行。
+ */
+// 中間允許空白：剃掉路線名之後「駁二大義輕軌站」會變成「駁二大義 站」
+const STATION_MARK = /^\s*(?:捷運站|車站|站|駅|[)\uff09]|(?:station|sta\b|gare)\b)/i;
+
+function mentionsStation(body: string, display: string): boolean {
+  // 官方名稱本身就以「站」結尾（台北車站、高鐵桃園站）不用再要求後綴
+  if (/站$/.test(display)) return body.includes(display);
+  for (let i = body.indexOf(display); i !== -1; i = body.indexOf(display, i + 1)) {
+    if (STATION_MARK.test(body.slice(i + display.length))) return true;
+  }
+  return false;
+}
+
 export type TransitIssue = { text: string };
 
 /**
@@ -100,11 +122,15 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
   // 這一段是用走的：沒搭車就沒有「該在同一條線上」的問題
   const onFoot = /步行|走路|徒歩|marche|à pied|on foot|walk/i.test(text);
 
-  // 舊站名：模型的訓練資料裡多半是舊的，但月台上寫的是新的
+  // 舊站名：模型的訓練資料裡多半是舊的，但月台上寫的是新的。
+  // 只在「明講是車站」或「往舊名方向」時才報 —— 「西子灣風景區」是景點不是站，
+  // 那個西子灣沒有改名，警告會變成誤導。
   for (const [old, now] of Object.entries(DB.renamed)) {
     const cur = cities.map((c) => DB.stations[`${c}|${normStation(now)}`]).find(Boolean);
     if (!cur) continue;
-    if (text.includes(old) && !text.includes(now)) {
+    const asStation =
+      text.includes(`${old}站`) || text.includes(`${old}捷運站`) || text.includes(`往${old}`);
+    if (asStation && !text.includes(now)) {
       issues.push({ text: W.renamed(old, now) });
     }
   }
@@ -114,7 +140,7 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
   for (const [, s] of Object.entries(DB.stations)) {
     if (!cities.includes(s.city)) continue;
     if (s.display.length < 2) continue;
-    if (body.includes(s.display)) found.push({ display: s.display, lines: s.lines });
+    if (mentionsStation(body, s.display)) found.push({ display: s.display, lines: s.lines });
   }
   // 站數不足就無從判斷路線，但前面抓到的改名警告要留著
   if (found.length < 2) return issues;

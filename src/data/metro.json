@@ -75,7 +75,9 @@
    "operator": "高雄輕軌",
    "name": "環狀輕軌",
    "en": "",
-   "aliases": []
+   "aliases": [
+    "輕軌"
+   ]
   },
   "TYMC:A": {
    "city": "桃園",

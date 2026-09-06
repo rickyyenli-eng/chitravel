@@ -30,7 +30,7 @@ const ALIASES: Record<string, string[]> = {
   "TRTC:G": ["綠線"],
   "TRTC:O": ["橘線"],
   "TRTC:R": ["紅線"],
-  "TYMC:A": ["機場捷運", "機捷"],
+  "TYMC:A": ["機場捷運", "機捷"], "KLRT:C": ["輕軌"],
   "TMRT:G": ["綠線"],
   "NTMC:Y": ["環狀線", "黃線"],
 };
