@@ -105,7 +105,7 @@
   }
  },
  "stations": {
-  "頂埔": {
+  "台北|頂埔": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -113,7 +113,7 @@
    "en": "Dingpu",
    "display": "頂埔"
   },
-  "永寧": {
+  "台北|永寧": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -121,7 +121,7 @@
    "en": "Yongning",
    "display": "永寧"
   },
-  "土城": {
+  "台北|土城": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -129,7 +129,7 @@
    "en": "Tucheng",
    "display": "土城"
   },
-  "海山": {
+  "台北|海山": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -137,7 +137,7 @@
    "en": "Haishan",
    "display": "海山"
   },
-  "亞東醫院": {
+  "台北|亞東醫院": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -145,7 +145,7 @@
    "en": "Far Eastern Hospital",
    "display": "亞東醫院"
   },
-  "府中": {
+  "台北|府中": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -153,7 +153,7 @@
    "en": "Fuzhong",
    "display": "府中"
   },
-  "板橋": {
+  "台北|板橋": {
    "city": "台北",
    "lines": [
     "TRTC:BL",
@@ -162,7 +162,7 @@
    "en": "Banqiao",
    "display": "板橋"
   },
-  "新埔": {
+  "台北|新埔": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -170,7 +170,7 @@
    "en": "Xinpu",
    "display": "新埔"
   },
-  "江子翠": {
+  "台北|江子翠": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -178,7 +178,7 @@
    "en": "Jiangzicui",
    "display": "江子翠"
   },
-  "龍山寺": {
+  "台北|龍山寺": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -186,7 +186,7 @@
    "en": "Longshan Temple",
    "display": "龍山寺"
   },
-  "西門": {
+  "台北|西門": {
    "city": "台北",
    "lines": [
     "TRTC:BL",
@@ -195,17 +195,16 @@
    "en": "Ximen",
    "display": "西門"
   },
-  "台北": {
+  "台北|台北": {
    "city": "台北",
    "lines": [
     "TRTC:BL",
-    "TRTC:R",
-    "TYMC:A"
+    "TRTC:R"
    ],
    "en": "Taipei Main Station",
    "display": "台北車站"
   },
-  "善導寺": {
+  "台北|善導寺": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -213,7 +212,7 @@
    "en": "Shandao Temple",
    "display": "善導寺"
   },
-  "忠孝新生": {
+  "台北|忠孝新生": {
    "city": "台北",
    "lines": [
     "TRTC:BL",
@@ -222,7 +221,7 @@
    "en": "Zhongxiao Xinsheng",
    "display": "忠孝新生"
   },
-  "忠孝復興": {
+  "台北|忠孝復興": {
    "city": "台北",
    "lines": [
     "TRTC:BL",
@@ -231,7 +230,7 @@
    "en": "Zhongxiao Fuxing",
    "display": "忠孝復興"
   },
-  "忠孝敦化": {
+  "台北|忠孝敦化": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -239,7 +238,7 @@
    "en": "Zhongxiao Dunhua",
    "display": "忠孝敦化"
   },
-  "國父紀念館": {
+  "台北|國父紀念館": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -247,16 +246,15 @@
    "en": "Sun Yat-Sen Memorial Hall",
    "display": "國父紀念館"
   },
-  "市政府": {
+  "台北|市政府": {
    "city": "台北",
    "lines": [
-    "TRTC:BL",
-    "TMRT:G"
+    "TRTC:BL"
    ],
    "en": "Taipei City Hall",
    "display": "市政府"
   },
-  "永春": {
+  "台北|永春": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -264,7 +262,7 @@
    "en": "Yongchun",
    "display": "永春"
   },
-  "後山埤": {
+  "台北|後山埤": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -272,7 +270,7 @@
    "en": "Houshanpi",
    "display": "後山埤"
   },
-  "昆陽": {
+  "台北|昆陽": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -280,7 +278,7 @@
    "en": "Kunyang",
    "display": "昆陽"
   },
-  "南港": {
+  "台北|南港": {
    "city": "台北",
    "lines": [
     "TRTC:BL"
@@ -288,7 +286,7 @@
    "en": "Nangang",
    "display": "南港"
   },
-  "南港展覽館": {
+  "台北|南港展覽館": {
    "city": "台北",
    "lines": [
     "TRTC:BL",
@@ -297,7 +295,7 @@
    "en": "Taipei Nangang Exhibition Center",
    "display": "南港展覽館"
   },
-  "動物園": {
+  "台北|動物園": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -305,7 +303,7 @@
    "en": "Taipei Zoo",
    "display": "動物園"
   },
-  "木柵": {
+  "台北|木柵": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -313,7 +311,7 @@
    "en": "Muzha",
    "display": "木柵"
   },
-  "萬芳社區": {
+  "台北|萬芳社區": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -321,7 +319,7 @@
    "en": "Wanfang Community",
    "display": "萬芳社區"
   },
-  "萬芳醫院": {
+  "台北|萬芳醫院": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -329,7 +327,7 @@
    "en": "Wanfang Hospital",
    "display": "萬芳醫院"
   },
-  "辛亥": {
+  "台北|辛亥": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -337,7 +335,7 @@
    "en": "Xinhai",
    "display": "辛亥"
   },
-  "麟光": {
+  "台北|麟光": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -345,7 +343,7 @@
    "en": "Linguang",
    "display": "麟光"
   },
-  "六張犁": {
+  "台北|六張犁": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -353,7 +351,7 @@
    "en": "Liuzhangli",
    "display": "六張犁"
   },
-  "科技大樓": {
+  "台北|科技大樓": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -361,7 +359,7 @@
    "en": "Technology Building",
    "display": "科技大樓"
   },
-  "大安": {
+  "台北|大安": {
    "city": "台北",
    "lines": [
     "TRTC:BR",
@@ -370,7 +368,7 @@
    "en": "Daan",
    "display": "大安"
   },
-  "南京復興": {
+  "台北|南京復興": {
    "city": "台北",
    "lines": [
     "TRTC:BR",
@@ -379,7 +377,7 @@
    "en": "Nanjing Fuxing",
    "display": "南京復興"
   },
-  "中山國中": {
+  "台北|中山國中": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -387,7 +385,7 @@
    "en": "Zhongshan Junior High School",
    "display": "中山國中"
   },
-  "松山機場": {
+  "台北|松山機場": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -395,7 +393,7 @@
    "en": "Songshan Airport",
    "display": "松山機場"
   },
-  "大直": {
+  "台北|大直": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -403,7 +401,7 @@
    "en": "Dazhi",
    "display": "大直"
   },
-  "劍南路": {
+  "台北|劍南路": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -411,7 +409,7 @@
    "en": "Jiannan Rd.",
    "display": "劍南路"
   },
-  "西湖": {
+  "台北|西湖": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -419,7 +417,7 @@
    "en": "Xihu",
    "display": "西湖"
   },
-  "港墘": {
+  "台北|港墘": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -427,7 +425,7 @@
    "en": "Gangqian",
    "display": "港墘"
   },
-  "文德": {
+  "台北|文德": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -435,7 +433,7 @@
    "en": "Wende",
    "display": "文德"
   },
-  "內湖": {
+  "台北|內湖": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -443,7 +441,7 @@
    "en": "Neihu",
    "display": "內湖"
   },
-  "大湖公園": {
+  "台北|大湖公園": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -451,7 +449,7 @@
    "en": "Dahu Park",
    "display": "大湖公園"
   },
-  "葫洲": {
+  "台北|葫洲": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -459,7 +457,7 @@
    "en": "Huzhou",
    "display": "葫洲"
   },
-  "東湖": {
+  "台北|東湖": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -467,7 +465,7 @@
    "en": "Donghu",
    "display": "東湖"
   },
-  "南港軟體園區": {
+  "台北|南港軟體園區": {
    "city": "台北",
    "lines": [
     "TRTC:BR"
@@ -475,7 +473,7 @@
    "en": "Nangang Software Park",
    "display": "南港軟體園區"
   },
-  "新店": {
+  "台北|新店": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -483,7 +481,7 @@
    "en": "Xindian",
    "display": "新店"
   },
-  "新店區公所": {
+  "台北|新店區公所": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -491,7 +489,7 @@
    "en": "Xindian District Office",
    "display": "新店區公所"
   },
-  "七張": {
+  "台北|七張": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -499,7 +497,7 @@
    "en": "Qizhang",
    "display": "七張"
   },
-  "大坪林": {
+  "台北|大坪林": {
    "city": "台北",
    "lines": [
     "TRTC:G",
@@ -508,7 +506,7 @@
    "en": "Dapinglin",
    "display": "大坪林"
   },
-  "景美": {
+  "台北|景美": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -516,7 +514,7 @@
    "en": "Jingmei",
    "display": "景美"
   },
-  "萬隆": {
+  "台北|萬隆": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -524,7 +522,7 @@
    "en": "Wanlong",
    "display": "萬隆"
   },
-  "公館": {
+  "台北|公館": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -532,7 +530,7 @@
    "en": "Gongguan",
    "display": "公館"
   },
-  "台電大樓": {
+  "台北|台電大樓": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -540,7 +538,7 @@
    "en": "Taipower Building",
    "display": "台電大樓"
   },
-  "古亭": {
+  "台北|古亭": {
    "city": "台北",
    "lines": [
     "TRTC:G",
@@ -549,7 +547,7 @@
    "en": "Guting",
    "display": "古亭"
   },
-  "中正紀念堂": {
+  "台北|中正紀念堂": {
    "city": "台北",
    "lines": [
     "TRTC:G",
@@ -558,7 +556,7 @@
    "en": "Chiang Kai-Shek Memorial Hall",
    "display": "中正紀念堂"
   },
-  "小南門": {
+  "台北|小南門": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -566,7 +564,7 @@
    "en": "Xiaonanmen",
    "display": "小南門"
   },
-  "北門": {
+  "台北|北門": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -574,7 +572,7 @@
    "en": "Beimen",
    "display": "北門"
   },
-  "中山": {
+  "台北|中山": {
    "city": "台北",
    "lines": [
     "TRTC:G",
@@ -583,7 +581,7 @@
    "en": "Zhongshan",
    "display": "中山"
   },
-  "松江南京": {
+  "台北|松江南京": {
    "city": "台北",
    "lines": [
     "TRTC:G",
@@ -592,7 +590,7 @@
    "en": "Songjiang Nanjing",
    "display": "松江南京"
   },
-  "台北小巨蛋": {
+  "台北|台北小巨蛋": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -600,7 +598,7 @@
    "en": "Taipei Arena",
    "display": "台北小巨蛋"
   },
-  "南京三民": {
+  "台北|南京三民": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -608,7 +606,7 @@
    "en": "Nanjing Sanmin",
    "display": "南京三民"
   },
-  "松山": {
+  "台北|松山": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -616,7 +614,7 @@
    "en": "Songshan",
    "display": "松山"
   },
-  "小碧潭": {
+  "台北|小碧潭": {
    "city": "台北",
    "lines": [
     "TRTC:G"
@@ -624,7 +622,7 @@
    "en": "Xiaobitan",
    "display": "小碧潭"
   },
-  "南勢角": {
+  "台北|南勢角": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -632,7 +630,7 @@
    "en": "Nanshijiao",
    "display": "南勢角"
   },
-  "景安": {
+  "台北|景安": {
    "city": "台北",
    "lines": [
     "TRTC:O",
@@ -641,7 +639,7 @@
    "en": "Jingan",
    "display": "景安"
   },
-  "永安市場": {
+  "台北|永安市場": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -649,7 +647,7 @@
    "en": "Yongan Market",
    "display": "永安市場"
   },
-  "頂溪": {
+  "台北|頂溪": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -657,7 +655,7 @@
    "en": "Dingxi",
    "display": "頂溪"
   },
-  "東門": {
+  "台北|東門": {
    "city": "台北",
    "lines": [
     "TRTC:O",
@@ -666,7 +664,7 @@
    "en": "Dongmen",
    "display": "東門"
   },
-  "行天宮": {
+  "台北|行天宮": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -674,7 +672,7 @@
    "en": "Xingtian Temple",
    "display": "行天宮"
   },
-  "中山國小": {
+  "台北|中山國小": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -682,7 +680,7 @@
    "en": "Zhongshan Elementary School",
    "display": "中山國小"
   },
-  "民權西路": {
+  "台北|民權西路": {
    "city": "台北",
    "lines": [
     "TRTC:O",
@@ -691,7 +689,7 @@
    "en": "Minquan W. Rd.",
    "display": "民權西路"
   },
-  "大橋頭": {
+  "台北|大橋頭": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -699,7 +697,7 @@
    "en": "Daqiaotou",
    "display": "大橋頭"
   },
-  "台北橋": {
+  "台北|台北橋": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -707,7 +705,7 @@
    "en": "Taipei Bridge",
    "display": "台北橋"
   },
-  "菜寮": {
+  "台北|菜寮": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -715,16 +713,15 @@
    "en": "Cailiao",
    "display": "菜寮"
   },
-  "三重": {
+  "台北|三重": {
    "city": "台北",
    "lines": [
-    "TRTC:O",
-    "TYMC:A"
+    "TRTC:O"
    ],
    "en": "Sanchong",
    "display": "三重"
   },
-  "先嗇宮": {
+  "台北|先嗇宮": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -732,7 +729,7 @@
    "en": "Xianse Temple",
    "display": "先嗇宮"
   },
-  "頭前庄": {
+  "台北|頭前庄": {
    "city": "台北",
    "lines": [
     "TRTC:O",
@@ -741,7 +738,7 @@
    "en": "Touqianzhuang",
    "display": "頭前庄"
   },
-  "新莊": {
+  "台北|新莊": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -749,7 +746,7 @@
    "en": "Xinzhuang",
    "display": "新莊"
   },
-  "輔大": {
+  "台北|輔大": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -757,7 +754,7 @@
    "en": "Fu Jen University",
    "display": "輔大"
   },
-  "丹鳳": {
+  "台北|丹鳳": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -765,7 +762,7 @@
    "en": "Danfeng",
    "display": "丹鳳"
   },
-  "迴龍": {
+  "台北|迴龍": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -773,7 +770,7 @@
    "en": "Huilong",
    "display": "迴龍"
   },
-  "三重國小": {
+  "台北|三重國小": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -781,7 +778,7 @@
    "en": "Sanchong Elementary School",
    "display": "三重國小"
   },
-  "三和國中": {
+  "台北|三和國中": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -789,7 +786,7 @@
    "en": "Sanhe Junior High School",
    "display": "三和國中"
   },
-  "徐匯中學": {
+  "台北|徐匯中學": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -797,7 +794,7 @@
    "en": "St.lgnatius High School",
    "display": "徐匯中學"
   },
-  "三民高中": {
+  "台北|三民高中": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -805,7 +802,7 @@
    "en": "Sanmin Senior High School",
    "display": "三民高中"
   },
-  "蘆洲": {
+  "台北|蘆洲": {
    "city": "台北",
    "lines": [
     "TRTC:O"
@@ -813,7 +810,7 @@
    "en": "Luzhou",
    "display": "蘆洲"
   },
-  "象山": {
+  "台北|象山": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -821,7 +818,7 @@
    "en": "Xiangshan",
    "display": "象山"
   },
-  "台北101/世貿": {
+  "台北|台北101/世貿": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -829,7 +826,7 @@
    "en": "Taipei 101/World Trade Center",
    "display": "台北101/世貿"
   },
-  "信義安和": {
+  "台北|信義安和": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -837,7 +834,7 @@
    "en": "Xinyi Anhe",
    "display": "信義安和"
   },
-  "大安森林公園": {
+  "台北|大安森林公園": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -845,7 +842,7 @@
    "en": "Daan Park",
    "display": "大安森林公園"
   },
-  "台大醫院": {
+  "台北|台大醫院": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -853,7 +850,7 @@
    "en": "NTU Hospital",
    "display": "台大醫院"
   },
-  "雙連": {
+  "台北|雙連": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -861,7 +858,7 @@
    "en": "Shuanglian",
    "display": "雙連"
   },
-  "圓山": {
+  "台北|圓山": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -869,7 +866,7 @@
    "en": "Yuanshan",
    "display": "圓山"
   },
-  "劍潭": {
+  "台北|劍潭": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -877,7 +874,7 @@
    "en": "Jiantan",
    "display": "劍潭"
   },
-  "士林": {
+  "台北|士林": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -885,7 +882,7 @@
    "en": "Shilin",
    "display": "士林"
   },
-  "芝山": {
+  "台北|芝山": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -893,7 +890,7 @@
    "en": "Zhishan",
    "display": "芝山"
   },
-  "明德": {
+  "台北|明德": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -901,7 +898,7 @@
    "en": "Mingde",
    "display": "明德"
   },
-  "石牌": {
+  "台北|石牌": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -909,7 +906,7 @@
    "en": "Shipai",
    "display": "石牌"
   },
-  "唭哩岸": {
+  "台北|唭哩岸": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -917,7 +914,7 @@
    "en": "Qilian",
    "display": "唭哩岸"
   },
-  "奇岩": {
+  "台北|奇岩": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -925,7 +922,7 @@
    "en": "Qiyan",
    "display": "奇岩"
   },
-  "北投": {
+  "台北|北投": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -933,7 +930,7 @@
    "en": "Beitou",
    "display": "北投"
   },
-  "復興崗": {
+  "台北|復興崗": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -941,7 +938,7 @@
    "en": "Fuxinggang",
    "display": "復興崗"
   },
-  "忠義": {
+  "台北|忠義": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -949,7 +946,7 @@
    "en": "Zhongyi",
    "display": "忠義"
   },
-  "關渡": {
+  "台北|關渡": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -957,7 +954,7 @@
    "en": "Guandu",
    "display": "關渡"
   },
-  "竹圍": {
+  "台北|竹圍": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -965,7 +962,7 @@
    "en": "Zhuwei",
    "display": "竹圍"
   },
-  "紅樹林": {
+  "台北|紅樹林": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -973,7 +970,7 @@
    "en": "Hongshulin",
    "display": "紅樹林"
   },
-  "淡水": {
+  "台北|淡水": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -981,7 +978,7 @@
    "en": "Tamsui",
    "display": "淡水"
   },
-  "新北投": {
+  "台北|新北投": {
    "city": "台北",
    "lines": [
     "TRTC:R"
@@ -989,16 +986,15 @@
    "en": "Xinbeitou",
    "display": "新北投"
   },
-  "十四張": {
+  "台北|十四張": {
    "city": "台北",
    "lines": [
-    "NTMC:Y",
-    "NTALRT:K"
+    "NTMC:Y"
    ],
    "en": "Shisizhang",
    "display": "十四張"
   },
-  "秀朗橋": {
+  "台北|秀朗橋": {
    "city": "台北",
    "lines": [
     "NTMC:Y"
@@ -1006,7 +1002,7 @@
    "en": "Xiulang Bridge",
    "display": "秀朗橋"
   },
-  "景平": {
+  "台北|景平": {
    "city": "台北",
    "lines": [
     "NTMC:Y"
@@ -1014,7 +1010,7 @@
    "en": "Jingping",
    "display": "景平"
   },
-  "中和": {
+  "台北|中和": {
    "city": "台北",
    "lines": [
     "NTMC:Y"
@@ -1022,7 +1018,7 @@
    "en": "Zhonghe",
    "display": "中和"
   },
-  "橋和": {
+  "台北|橋和": {
    "city": "台北",
    "lines": [
     "NTMC:Y"
@@ -1030,7 +1026,7 @@
    "en": "Qiaohe",
    "display": "橋和"
   },
-  "中原": {
+  "台北|中原": {
    "city": "台北",
    "lines": [
     "NTMC:Y"
@@ -1038,7 +1034,7 @@
    "en": "Zhongyuan",
    "display": "中原"
   },
-  "板新": {
+  "台北|板新": {
    "city": "台北",
    "lines": [
     "NTMC:Y"
@@ -1046,7 +1042,7 @@
    "en": "Banxin",
    "display": "板新"
   },
-  "新埔民生": {
+  "台北|新埔民生": {
    "city": "台北",
    "lines": [
     "NTMC:Y"
@@ -1054,7 +1050,7 @@
    "en": "Xinpu Minsheng",
    "display": "新埔民生"
   },
-  "幸福": {
+  "台北|幸福": {
    "city": "台北",
    "lines": [
     "NTMC:Y"
@@ -1062,16 +1058,15 @@
    "en": "Xingfu",
    "display": "幸福"
   },
-  "新北產業園區": {
+  "台北|新北產業園區": {
    "city": "台北",
    "lines": [
-    "NTMC:Y",
-    "TYMC:A"
+    "NTMC:Y"
    ],
    "en": "New Taipei Industrial Park",
    "display": "新北產業園區"
   },
-  "哈瑪星": {
+  "高雄|哈瑪星": {
    "city": "高雄",
    "lines": [
     "KRTC:O",
@@ -1080,7 +1075,7 @@
    "en": "Hamasen",
    "display": "哈瑪星"
   },
-  "鹽埕埔": {
+  "高雄|鹽埕埔": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1088,7 +1083,7 @@
    "en": "Yanchengpu",
    "display": "鹽埕埔"
   },
-  "前金": {
+  "高雄|前金": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1096,7 +1091,7 @@
    "en": "Cianjin",
    "display": "前金"
   },
-  "美麗島": {
+  "高雄|美麗島": {
    "city": "高雄",
    "lines": [
     "KRTC:O",
@@ -1105,7 +1100,7 @@
    "en": "Formosa Boulevard",
    "display": "美麗島"
   },
-  "信義國小": {
+  "高雄|信義國小": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1113,7 +1108,7 @@
    "en": "Sinyi Elementary School",
    "display": "信義國小"
   },
-  "文化中心": {
+  "高雄|文化中心": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1121,7 +1116,7 @@
    "en": "Cultural Center",
    "display": "文化中心"
   },
-  "五塊厝": {
+  "高雄|五塊厝": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1129,7 +1124,7 @@
    "en": "Wukuaicuo",
    "display": "五塊厝"
   },
-  "苓雅運動園區": {
+  "高雄|苓雅運動園區": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1137,7 +1132,7 @@
    "en": "Lingya Sports Park",
    "display": "苓雅運動園區"
   },
-  "衛武營": {
+  "高雄|衛武營": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1145,7 +1140,7 @@
    "en": "Weiwuying",
    "display": "衛武營"
   },
-  "鳳山西": {
+  "高雄|鳳山西": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1153,7 +1148,7 @@
    "en": "Fongshan West",
    "display": "鳳山西站"
   },
-  "鳳山": {
+  "高雄|鳳山": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1161,7 +1156,7 @@
    "en": "Fongshan",
    "display": "鳳山"
   },
-  "大東": {
+  "高雄|大東": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1169,7 +1164,7 @@
    "en": "Dadong",
    "display": "大東"
   },
-  "鳳山國中": {
+  "高雄|鳳山國中": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1177,7 +1172,7 @@
    "en": "Fongshan Junior High School",
    "display": "鳳山國中"
   },
-  "大寮": {
+  "高雄|大寮": {
    "city": "高雄",
    "lines": [
     "KRTC:O"
@@ -1185,7 +1180,7 @@
    "en": "Daliao",
    "display": "大寮"
   },
-  "小港": {
+  "高雄|小港": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1193,7 +1188,7 @@
    "en": "Siaogang",
    "display": "小港"
   },
-  "高雄國際機場": {
+  "高雄|高雄國際機場": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1201,7 +1196,7 @@
    "en": "Kaohsiung International Airport",
    "display": "高雄國際機場"
   },
-  "草衙": {
+  "高雄|草衙": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1209,7 +1204,7 @@
    "en": "Caoya",
    "display": "草衙"
   },
-  "前鎮高中": {
+  "高雄|前鎮高中": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1217,7 +1212,7 @@
    "en": "Cianjhen Senior High School",
    "display": "前鎮高中"
   },
-  "凱旋": {
+  "高雄|凱旋": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1225,7 +1220,7 @@
    "en": "Kaisyuan",
    "display": "凱旋"
   },
-  "獅甲": {
+  "高雄|獅甲": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1233,7 +1228,7 @@
    "en": "Shihjia",
    "display": "獅甲"
   },
-  "三多商圈": {
+  "高雄|三多商圈": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1241,7 +1236,7 @@
    "en": "Sanduo Shopping District",
    "display": "三多商圈"
   },
-  "中央公園": {
+  "高雄|中央公園": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1249,7 +1244,7 @@
    "en": "Central Park",
    "display": "中央公園"
   },
-  "高雄": {
+  "高雄|高雄": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1257,7 +1252,7 @@
    "en": "Kaohsiung Main Station",
    "display": "高雄車站"
   },
-  "後驛": {
+  "高雄|後驛": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1265,7 +1260,7 @@
    "en": "Houyi",
    "display": "後驛"
   },
-  "凹子底": {
+  "高雄|凹子底": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1273,7 +1268,7 @@
    "en": "Aozihdi",
    "display": "凹子底"
   },
-  "巨蛋": {
+  "高雄|巨蛋": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1281,7 +1276,7 @@
    "en": "Kaohsiung Arena",
    "display": "巨蛋"
   },
-  "生態園區": {
+  "高雄|生態園區": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1289,7 +1284,7 @@
    "en": "Ecological District",
    "display": "生態園區"
   },
-  "左營": {
+  "高雄|左營": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1297,7 +1292,7 @@
    "en": "Zuoying",
    "display": "左營"
   },
-  "世運": {
+  "高雄|世運": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1305,7 +1300,7 @@
    "en": "World Game",
    "display": "世運"
   },
-  "油廠國小": {
+  "高雄|油廠國小": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1313,7 +1308,7 @@
    "en": "Oil Refinery Elementary School",
    "display": "油廠國小"
   },
-  "楠梓科技園區": {
+  "高雄|楠梓科技園區": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1321,7 +1316,7 @@
    "en": "Nanzih Technology Industrial Park",
    "display": "楠梓科技園區"
   },
-  "後勁": {
+  "高雄|後勁": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1329,7 +1324,7 @@
    "en": "Houjing",
    "display": "後勁"
   },
-  "都會公園": {
+  "高雄|都會公園": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1337,7 +1332,7 @@
    "en": "Metropolitan Park",
    "display": "都會公園"
   },
-  "青埔": {
+  "高雄|青埔": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1345,7 +1340,7 @@
    "en": "Cingpu",
    "display": "青埔"
   },
-  "橋頭糖廠": {
+  "高雄|橋頭糖廠": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1353,7 +1348,7 @@
    "en": "Ciaotou Sugar Refinery",
    "display": "橋頭糖廠"
   },
-  "橋頭火": {
+  "高雄|橋頭火": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1361,7 +1356,7 @@
    "en": "Ciaotou Station",
    "display": "橋頭火車站"
   },
-  "岡山高醫": {
+  "高雄|岡山高醫": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1369,7 +1364,7 @@
    "en": "Kaohsiung Medical University Gangshan Hospital",
    "display": "岡山高醫"
   },
-  "岡山": {
+  "高雄|岡山": {
    "city": "高雄",
    "lines": [
     "KRTC:R"
@@ -1377,7 +1372,7 @@
    "en": "Gangshan Station",
    "display": "岡山車站"
   },
-  "籬仔內": {
+  "高雄|籬仔內": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1385,7 +1380,7 @@
    "en": "Lizihnei",
    "display": "籬仔內"
   },
-  "凱旋瑞田": {
+  "高雄|凱旋瑞田": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1393,7 +1388,7 @@
    "en": "Kaisyuan Rueitian",
    "display": "凱旋瑞田"
   },
-  "前鎮之星": {
+  "高雄|前鎮之星": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1401,7 +1396,7 @@
    "en": "Cianjhen Star",
    "display": "前鎮之星"
   },
-  "凱旋中華": {
+  "高雄|凱旋中華": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1409,7 +1404,7 @@
    "en": "Kaisyuan Jhonghua",
    "display": "凱旋中華"
   },
-  "夢時代": {
+  "高雄|夢時代": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1417,7 +1412,7 @@
    "en": "Dream Mall",
    "display": "夢時代"
   },
-  "經貿園區": {
+  "高雄|經貿園區": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1425,7 +1420,7 @@
    "en": "Commerce and Trade Park",
    "display": "經貿園區"
   },
-  "軟體園區": {
+  "高雄|軟體園區": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1433,7 +1428,7 @@
    "en": "Software Technology Park",
    "display": "軟體園區"
   },
-  "高雄展覽館": {
+  "高雄|高雄展覽館": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1441,7 +1436,7 @@
    "en": "Kaohsiung Exhibition Center",
    "display": "高雄展覽館"
   },
-  "旅運中心": {
+  "高雄|旅運中心": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1449,7 +1444,7 @@
    "en": "Cruise Terminal",
    "display": "旅運中心"
   },
-  "光榮碼頭": {
+  "高雄|光榮碼頭": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1457,7 +1452,7 @@
    "en": "Glory Pier",
    "display": "光榮碼頭"
   },
-  "真愛碼頭": {
+  "高雄|真愛碼頭": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1465,7 +1460,7 @@
    "en": "Love Pier",
    "display": "真愛碼頭"
   },
-  "駁二大義": {
+  "高雄|駁二大義": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1473,7 +1468,7 @@
    "en": "Dayi Pier-2",
    "display": "駁二大義"
   },
-  "駁二蓬萊": {
+  "高雄|駁二蓬萊": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1481,7 +1476,7 @@
    "en": "Penglai Pier-2",
    "display": "駁二蓬萊"
   },
-  "壽山公園": {
+  "高雄|壽山公園": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1489,7 +1484,7 @@
    "en": "Shoushan Park",
    "display": "壽山公園站"
   },
-  "文武聖殿": {
+  "高雄|文武聖殿": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1497,7 +1492,7 @@
    "en": "Wenwu Temple",
    "display": "文武聖殿站"
   },
-  "鼓山區公所": {
+  "高雄|鼓山區公所": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1505,7 +1500,7 @@
    "en": "Gushan District Office",
    "display": "鼓山區公所站"
   },
-  "鼓山": {
+  "高雄|鼓山": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1513,7 +1508,7 @@
    "en": "Gushan",
    "display": "鼓山"
   },
-  "馬卡道": {
+  "高雄|馬卡道": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1521,7 +1516,7 @@
    "en": "Makadao",
    "display": "馬卡道"
   },
-  "臺鐵美術館": {
+  "高雄|臺鐵美術館": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1529,7 +1524,7 @@
    "en": "TRA Museum of Fine Arts",
    "display": "臺鐵美術館"
   },
-  "內惟藝術中心": {
+  "高雄|內惟藝術中心": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1537,7 +1532,7 @@
    "en": "Neiwei Arts Center",
    "display": "內惟藝術中心"
   },
-  "美術館": {
+  "高雄|美術館": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1545,7 +1540,7 @@
    "en": "Kaohsiung Museum of Fine Arts",
    "display": "美術館"
   },
-  "聯合醫院": {
+  "高雄|聯合醫院": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1553,7 +1548,7 @@
    "en": "Kaohsiung Municipal United Hospital",
    "display": "聯合醫院"
   },
-  "龍華國小": {
+  "高雄|龍華國小": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1561,7 +1556,7 @@
    "en": "Longhua Elementary School",
    "display": "龍華國小"
   },
-  "愛河之心": {
+  "高雄|愛河之心": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1569,7 +1564,7 @@
    "en": "Heart of Love River",
    "display": "愛河之心"
   },
-  "新上國小": {
+  "高雄|新上國小": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1577,7 +1572,7 @@
    "en": "Sinshang Elementary School",
    "display": "新上國小"
   },
-  "大順民族": {
+  "高雄|大順民族": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1585,7 +1580,7 @@
    "en": "Dashun Minzu",
    "display": "大順民族"
   },
-  "灣仔內(大順鼎山)": {
+  "高雄|灣仔內(大順鼎山)": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1593,7 +1588,7 @@
    "en": "Wanzihnei(Dashun Dingshan)",
    "display": "灣仔內(大順鼎山)"
   },
-  "高雄高工": {
+  "高雄|高雄高工": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1601,7 +1596,7 @@
    "en": "Kaohsiung Industrial High School",
    "display": "高雄高工"
   },
-  "樹德家商": {
+  "高雄|樹德家商": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1609,7 +1604,7 @@
    "en": "Shu-Te Home-Economics & Commercial High School",
    "display": "樹德家商"
   },
-  "科工館": {
+  "高雄|科工館": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1617,7 +1612,7 @@
    "en": "Science and Technology Museum",
    "display": "科工館"
   },
-  "聖功醫院": {
+  "高雄|聖功醫院": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1625,7 +1620,7 @@
    "en": "St.Joseph Hospital",
    "display": "聖功醫院"
   },
-  "凱旋公園": {
+  "高雄|凱旋公園": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1633,7 +1628,7 @@
    "en": "Kaisyuan Park",
    "display": "凱旋公園站"
   },
-  "衛生局": {
+  "高雄|衛生局": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1641,7 +1636,7 @@
    "en": "Department of Health",
    "display": "衛生局站"
   },
-  "五權國小": {
+  "高雄|五權國小": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1649,7 +1644,7 @@
    "en": "Wucyuan Elementary School",
    "display": "五權國小站"
   },
-  "凱旋武昌": {
+  "高雄|凱旋武昌": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1657,7 +1652,7 @@
    "en": "Kaisyuan Wuchang",
    "display": "凱旋武昌站"
   },
-  "凱旋二聖": {
+  "高雄|凱旋二聖": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1665,7 +1660,7 @@
    "en": "Kaisyuan Ersheng",
    "display": "凱旋二聖站"
   },
-  "輕軌機廠": {
+  "高雄|輕軌機廠": {
    "city": "高雄",
    "lines": [
     "KLRT:C"
@@ -1673,7 +1668,31 @@
    "en": "LRT Depot",
    "display": "輕軌機廠站"
   },
-  "新莊副都心": {
+  "桃園|台北": {
+   "city": "桃園",
+   "lines": [
+    "TYMC:A"
+   ],
+   "en": "Taipei Main Station",
+   "display": "台北車站"
+  },
+  "桃園|三重": {
+   "city": "桃園",
+   "lines": [
+    "TYMC:A"
+   ],
+   "en": "Sanchong Station",
+   "display": "三重站"
+  },
+  "桃園|新北產業園區": {
+   "city": "桃園",
+   "lines": [
+    "TYMC:A"
+   ],
+   "en": "New Taipei Industrial Park Station",
+   "display": "新北產業園區站"
+  },
+  "桃園|新莊副都心": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1681,7 +1700,7 @@
    "en": "Xinzhuang Fuduxin Station",
    "display": "新莊副都心站"
   },
-  "泰山": {
+  "桃園|泰山": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1689,7 +1708,7 @@
    "en": "Taishan Station",
    "display": "泰山站"
   },
-  "泰山貴和": {
+  "桃園|泰山貴和": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1697,7 +1716,7 @@
    "en": "Taishan Guihe Station",
    "display": "泰山貴和站"
   },
-  "體育大學": {
+  "桃園|體育大學": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1705,7 +1724,7 @@
    "en": "National Taiwan Sport University Station",
    "display": "體育大學站"
   },
-  "長庚醫院": {
+  "桃園|長庚醫院": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1713,7 +1732,7 @@
    "en": "Chang Gung Memorial Hospital Station",
    "display": "長庚醫院站"
   },
-  "林口": {
+  "桃園|林口": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1721,7 +1740,7 @@
    "en": "Linkou Station",
    "display": "林口站"
   },
-  "山鼻": {
+  "桃園|山鼻": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1729,7 +1748,7 @@
    "en": "Shanbi Station",
    "display": "山鼻站"
   },
-  "坑口": {
+  "桃園|坑口": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1737,7 +1756,7 @@
    "en": "Kengkou Station",
    "display": "坑口站"
   },
-  "機場第一航廈": {
+  "桃園|機場第一航廈": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1745,7 +1764,7 @@
    "en": "Airport Terminal 1 Station",
    "display": "機場第一航廈站"
   },
-  "機場第二航廈": {
+  "桃園|機場第二航廈": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1753,7 +1772,7 @@
    "en": "Airport Terminal 2 Station",
    "display": "機場第二航廈站"
   },
-  "機場旅館": {
+  "桃園|機場旅館": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1761,7 +1780,7 @@
    "en": "Airport Hotel Station",
    "display": "機場旅館站"
   },
-  "大園": {
+  "桃園|大園": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1769,7 +1788,7 @@
    "en": "Dayuan Station",
    "display": "大園站"
   },
-  "橫山": {
+  "桃園|橫山": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1777,7 +1796,7 @@
    "en": "Hengshan Station",
    "display": "橫山站"
   },
-  "領航": {
+  "桃園|領航": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1785,7 +1804,7 @@
    "en": "Linghang Station",
    "display": "領航站"
   },
-  "高鐵桃園": {
+  "桃園|高鐵桃園": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1793,7 +1812,7 @@
    "en": "Taoyuan HSR Station",
    "display": "高鐵桃園站"
   },
-  "桃園體育園區": {
+  "桃園|桃園體育園區": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1801,7 +1820,7 @@
    "en": "Taoyuan Sports Park Station",
    "display": "桃園體育園區站"
   },
-  "興南": {
+  "桃園|興南": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1809,7 +1828,7 @@
    "en": "Xingnan Station",
    "display": "興南站"
   },
-  "環北": {
+  "桃園|環北": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1817,7 +1836,7 @@
    "en": "Huanbei Station",
    "display": "環北站"
   },
-  "老街溪": {
+  "桃園|老街溪": {
    "city": "桃園",
    "lines": [
     "TYMC:A"
@@ -1825,7 +1844,7 @@
    "en": "Laojie River Station",
    "display": "老街溪站"
   },
-  "北屯總": {
+  "台中|北屯總": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1833,7 +1852,7 @@
    "en": "Beitun Main Station",
    "display": "北屯總站"
   },
-  "舊社": {
+  "台中|舊社": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1841,7 +1860,7 @@
    "en": "Jiushe",
    "display": "舊社"
   },
-  "松竹": {
+  "台中|松竹": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1849,7 +1868,7 @@
    "en": "Songzhu",
    "display": "松竹"
   },
-  "四維國小": {
+  "台中|四維國小": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1857,7 +1876,7 @@
    "en": "Sihwei Elementary School",
    "display": "四維國小"
   },
-  "文心崇德": {
+  "台中|文心崇德": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1865,7 +1884,7 @@
    "en": "Wenxin Chongde",
    "display": "文心崇德"
   },
-  "文心中清": {
+  "台中|文心中清": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1873,7 +1892,7 @@
    "en": "Wenxin Zhongqing",
    "display": "文心中清"
   },
-  "文華高中": {
+  "台中|文華高中": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1881,7 +1900,7 @@
    "en": "Wenhua Senior High School",
    "display": "文華高中"
   },
-  "文心櫻花": {
+  "台中|文心櫻花": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1889,7 +1908,15 @@
    "en": "Wenxin Yinghua",
    "display": "文心櫻花"
   },
-  "水安宮": {
+  "台中|市政府": {
+   "city": "台中",
+   "lines": [
+    "TMRT:G"
+   ],
+   "en": "Taichung City Hall",
+   "display": "市政府"
+  },
+  "台中|水安宮": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1897,7 +1924,7 @@
    "en": "Shui-an Temple",
    "display": "水安宮"
   },
-  "文心森林公園": {
+  "台中|文心森林公園": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1905,7 +1932,7 @@
    "en": "Wenxin Forest Park",
    "display": "文心森林公園"
   },
-  "南屯": {
+  "台中|南屯": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1913,7 +1940,7 @@
    "en": "Nantun",
    "display": "南屯"
   },
-  "豐樂公園": {
+  "台中|豐樂公園": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1921,7 +1948,7 @@
    "en": "Feng-le Park",
    "display": "豐樂公園"
   },
-  "大慶": {
+  "台中|大慶": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1929,7 +1956,7 @@
    "en": "Daqing",
    "display": "大慶"
   },
-  "九張犁": {
+  "台中|九張犁": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1937,7 +1964,7 @@
    "en": "Jiuzhangli",
    "display": "九張犁"
   },
-  "九德": {
+  "台中|九德": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1945,7 +1972,7 @@
    "en": "Jiude",
    "display": "九德"
   },
-  "烏日": {
+  "台中|烏日": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1953,7 +1980,7 @@
    "en": "Wuri",
    "display": "烏日"
   },
-  "高鐵臺中": {
+  "台中|高鐵臺中": {
    "city": "台中",
    "lines": [
     "TMRT:G"
@@ -1961,7 +1988,7 @@
    "en": "HSR Taichung Station",
    "display": "高鐵臺中站"
   },
-  "雙城": {
+  "新北|雙城": {
    "city": "新北",
    "lines": [
     "NTALRT:K"
@@ -1969,7 +1996,7 @@
    "en": "Shuangcheng",
    "display": "雙城"
   },
-  "玫瑰中國城": {
+  "新北|玫瑰中國城": {
    "city": "新北",
    "lines": [
     "NTALRT:K"
@@ -1977,7 +2004,7 @@
    "en": "Rose China Town",
    "display": "玫瑰中國城"
   },
-  "台北小城": {
+  "新北|台北小城": {
    "city": "新北",
    "lines": [
     "NTALRT:K"
@@ -1985,7 +2012,7 @@
    "en": "Taipei Xiaocheng",
    "display": "台北小城"
   },
-  "耕莘安康院區": {
+  "新北|耕莘安康院區": {
    "city": "新北",
    "lines": [
     "NTALRT:K"
@@ -1993,7 +2020,7 @@
    "en": "Cardinal Tien Hospital An Kang Branch",
    "display": "耕莘安康院區"
   },
-  "景文科大": {
+  "新北|景文科大": {
    "city": "新北",
    "lines": [
     "NTALRT:K"
@@ -2001,7 +2028,7 @@
    "en": "Jinwen University of Science and Technology",
    "display": "景文科大"
   },
-  "安康": {
+  "新北|安康": {
    "city": "新北",
    "lines": [
     "NTALRT:K"
@@ -2009,7 +2036,7 @@
    "en": "Ankang",
    "display": "安康"
   },
-  "陽光運動公園": {
+  "新北|陽光運動公園": {
    "city": "新北",
    "lines": [
     "NTALRT:K"
@@ -2017,13 +2044,21 @@
    "en": "Sunshine Sports Park",
    "display": "陽光運動公園"
   },
-  "新和國小": {
+  "新北|新和國小": {
    "city": "新北",
    "lines": [
     "NTALRT:K"
    ],
    "en": "Xinhe Elementary School",
    "display": "新和國小"
+  },
+  "新北|十四張": {
+   "city": "新北",
+   "lines": [
+    "NTALRT:K"
+   ],
+   "en": "Shisizhang",
+   "display": "十四張"
   }
  },
  "renamed": {

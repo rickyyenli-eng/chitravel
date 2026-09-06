@@ -50,7 +50,7 @@ export function promptIndex(dest: string): string {
   if (!rows.length) return "";
 
   const renames = Object.entries(DB.renamed)
-    .filter(([, now]) => DB.stations[normStation(now)] && cities.includes(DB.stations[normStation(now)]!.city))
+    .filter(([, now]) => cities.some((c) => DB.stations[`${c}|${normStation(now)}`]))
     .map(([old, now]) => `${old}→${now}`);
 
   return [
@@ -79,16 +79,31 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
   const W = WARN[lang];
   const issues: TransitIssue[] = [];
 
-  // 「往象山方向」「往淡水方向」裡的是終點站，不是這趟會停的站。
-  // 不剃掉的話會被當成行程站，然後理所當然地「不在這條線上」。
-  const body = text
+  // 剃掉三種會被誤認成「行程站」的東西：
+  //   1. 「往象山方向」— 那是終點站，不是這趟會停的站
+  //   2. 路線名 — 「中和新蘆線」裡有「中和」，而中和真的是個站
+  //   3. 已改名的舊名 — 上面已經單獨處理過，別再進站名比對
+  const noDirection = text
     .replace(/往[^，,。；;]{1,8}?方向/g, " ")
     .replace(/(?:direction|vers|方面)\s*[^，,。；;]{1,20}/gi, " ");
 
+  // 路線名要用「還沒剃掉路線名」的文字來找，不然等於自己把線索抹掉
+  const mentioned: string[] = [];
+  let body = noDirection;
+  for (const [key, l] of Object.entries(DB.lines)) {
+    if (!cities.includes(l.city) || !l.name) continue;
+    const names = [l.name, ...(l.aliases || [])].filter(Boolean);
+    if (names.some((n) => noDirection.includes(n))) mentioned.push(key);
+    for (const n of names) body = body.split(n).join(" ");
+  }
+
+  // 這一段是用走的：沒搭車就沒有「該在同一條線上」的問題
+  const onFoot = /步行|走路|徒歩|marche|à pied|on foot|walk/i.test(text);
+
   // 舊站名：模型的訓練資料裡多半是舊的，但月台上寫的是新的
   for (const [old, now] of Object.entries(DB.renamed)) {
-    const cur = DB.stations[normStation(now)];
-    if (!cur || !cities.includes(cur.city)) continue;
+    const cur = cities.map((c) => DB.stations[`${c}|${normStation(now)}`]).find(Boolean);
+    if (!cur) continue;
     if (text.includes(old) && !text.includes(now)) {
       issues.push({ text: W.renamed(old, now) });
     }
@@ -103,14 +118,6 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
   }
   // 站數不足就無從判斷路線，但前面抓到的改名警告要留著
   if (found.length < 2) return issues;
-
-  // 找出這段話提到了哪些路線名
-  const mentioned: string[] = [];
-  for (const [key, l] of Object.entries(DB.lines)) {
-    if (!cities.includes(l.city) || !l.name) continue;
-    // 正式名稱或顏色別名，任一命中都算提到了這條線
-    if ([l.name, ...(l.aliases || [])].some((n) => n && body.includes(n))) mentioned.push(key);
-  }
 
   // 長站名會包含短站名（例如「台北車站」含「台北」），只留最長的那些
   const uniq = found
@@ -140,8 +147,9 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
         issues.push({ text: W.notOnLine(s.display, names, real) });
       }
     }
-  } else {
-    // 沒說路線，那至少檢查頭尾兩站有沒有共線；沒有的話就是漏了轉乘
+  } else if (!onFoot) {
+    // 沒說路線，那至少檢查頭尾兩站有沒有共線；沒有的話就是漏了轉乘。
+    // 但走路過去的段落不算 —— 「市政府站步行至松山文創園區」不需要共線。
     const a = uniq[0], b = uniq[uniq.length - 1];
     if (a && b && !a.lines.some((l) => b.lines.includes(l))) {
       issues.push({ text: W.needTransfer(a.display, b.display) });
