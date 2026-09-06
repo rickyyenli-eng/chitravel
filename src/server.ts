@@ -2,15 +2,27 @@ import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { assertConfig, config } from "./config.js";
+import { metroFetchedAt } from "./lib/metro.js";
 import { placesRoute } from "./routes/places.js";
 import { planRoute } from "./routes/plan.js";
 import { replanRoute } from "./routes/replan.js";
 
 assertConfig();
 
+const startedAt = new Date().toISOString();
 const app = new Hono();
 
-app.get("/healthz", (c) => c.json({ ok: true, model: config.plannerModel }));
+// 部署後要能從外面確認「線上跑的是哪一版」。
+// RENDER_GIT_COMMIT 是 Render 自動注入的，本機沒有就顯示 dev。
+app.get("/healthz", (c) =>
+  c.json({
+    ok: true,
+    model: config.plannerModel,
+    commit: (process.env.RENDER_GIT_COMMIT || "dev").slice(0, 7),
+    metro: metroFetchedAt,
+    startedAt,
+  }),
+);
 app.route("/api", planRoute);
 app.route("/api", placesRoute);
 app.route("/api", replanRoute);
