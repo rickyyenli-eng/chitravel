@@ -122,6 +122,12 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
   // 這一段是用走的：沒搭車就沒有「該在同一條線上」的問題
   const onFoot = /步行|走路|徒歩|marche|à pied|on foot|walk/i.test(text);
 
+  // 「A 或 B」這種二選一的敘述，句子裡的站分屬不同走法，
+  // 「所有站都該在同一條線上」的前提就不成立：
+  //   「從鹽埕埔站步行 12 分鐘，或搭輕軌至駁二大義站」
+  // 鹽埕埔在橘線、駁二大義在環狀輕軌，兩個都對，但湊在一起看就像錯的。
+  const hasAlternative = /或|或是|\bor\b|\bou\b|または|もしくは/i.test(text);
+
   // 舊站名：模型的訓練資料裡多半是舊的，但月台上寫的是新的。
   // 只在「明講是車站」或「往舊名方向」時才報 —— 「西子灣風景區」是景點不是站，
   // 那個西子灣沒有改名，警告會變成誤導。
@@ -151,8 +157,9 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
     .slice(0, 6);
   if (uniq.length < 2) return issues;
 
-  if (mentioned.length === 1) {
-    // 只提到一條線 = 沒有轉乘，那所有提到的站都該在那條線上
+  if (mentioned.length === 1 && !hasAlternative) {
+    // 只提到一條線、又沒有「或」的替代走法 = 一條線走到底，
+    // 那所有提到的站都該在那條線上
     const lineKey = mentioned[0]!;
     const off = uniq.filter((s) => !s.lines.includes(lineKey));
     if (off.length && off.length < uniq.length) {
