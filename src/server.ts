@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { assertConfig, config } from "./config.js";
 import { placesRoute } from "./routes/places.js";
 import { planRoute } from "./routes/plan.js";
+import { replanRoute } from "./routes/replan.js";
 
 assertConfig();
 
@@ -12,6 +13,7 @@ const app = new Hono();
 app.get("/healthz", (c) => c.json({ ok: true, model: config.plannerModel }));
 app.route("/api", planRoute);
 app.route("/api", placesRoute);
+app.route("/api", replanRoute);
 
 // 前端就是一份靜態檔，之後要換成 Vite / Next 再說
 app.use("/*", serveStatic({ root: "./public" }));

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>順路走 行程機</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
 <style>
 html,body{margin:0}
 img{max-width:100%}
@@ -47,7 +47,15 @@ body{
   font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased;
 }
+/* 日文的漢字字形跟繁中不同，語言切到日文時換一套字 */
+html[lang="ja"] body{font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif}
+html[lang="en"] body,html[lang="fr"] body{
+  font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,"Noto Sans TC",sans-serif;
+}
 h1,h2,h3{font-family:"Noto Serif TC",Georgia,"Songti TC",serif;font-weight:700;margin:0;text-wrap:balance;line-height:1.3}
+html[lang="en"] h1,html[lang="en"] h2,html[lang="en"] h3,
+html[lang="fr"] h1,html[lang="fr"] h2,html[lang="fr"] h3{font-family:Georgia,"Times New Roman",serif}
+html[lang="ja"] h1,html[lang="ja"] h2,html[lang="ja"] h3{font-family:"Noto Sans JP","Hiragino Sans",sans-serif}
 .mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
@@ -66,10 +74,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 .brand h1{font-size:23px;letter-spacing:.01em}
 .brand p{margin:1px 0 0;font-size:12.5px;color:var(--muted);letter-spacing:.06em}
 .masthead .spacer{flex:1}
+.headright{display:flex;align-items:center;gap:14px}
 .stampline{
   font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--muted);
 }
+.langs{display:flex;gap:2px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.langs button{
+  border:none;background:none;padding:5px 10px;font-size:12.5px;color:var(--muted);
+  font-family:"IBM Plex Mono",monospace;letter-spacing:.04em;
+}
+.langs button:hover{background:var(--surface-2)}
+.langs button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
 
 .cols{display:grid;grid-template-columns:1fr;gap:26px}
 @media (min-width:960px){ .cols{grid-template-columns:352px minmax(0,1fr);gap:34px;align-items:start} }
@@ -104,6 +120,7 @@ textarea{resize:vertical;min-height:60px}
 .chip:hover{border-color:var(--rail)}
 .chip input{position:absolute;opacity:0;width:0;height:0}
 .chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:500}
+
 /* 地點自動完成 */
 .ac{position:relative}
 .ac-list{
@@ -120,12 +137,25 @@ textarea{resize:vertical;min-height:60px}
 .ac-item:hover,.ac-item.sel{background:var(--accent-soft)}
 .ac-item .m{font-size:14px;font-weight:500;display:block}
 .ac-item .s{font-size:12px;color:var(--muted);display:block;margin-top:1px}
-.ac-note{padding:9px 12px;font-size:12.5px;color:var(--muted)}
 .locbtn{
   align-self:flex-start;background:none;border:none;padding:2px 0;margin-top:2px;
   font-size:12.5px;color:var(--info);text-decoration:underline;text-underline-offset:3px;
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .locbtn:disabled{opacity:.55;cursor:default;text-decoration:none}
+
+.saved{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.saved-head{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.saved-head .lab{flex:1;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+.saved-head .mini{padding:3px 9px;font-size:12px}
+.srow{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
+.srow:last-child{border-bottom:none}
+.srow .n{flex:1;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .d{font-size:11px;color:var(--muted);font-family:"IBM Plex Mono",monospace;flex:none}
+.srow button{background:none;border:none;padding:0 2px;font-size:12px;color:var(--info);text-decoration:underline;text-underline-offset:2px;flex:none}
+.srow button.del{color:var(--muted)}
+.srow button.del:hover{color:var(--warn)}
+.empty-saved{font-size:12.5px;color:var(--muted);padding:4px 0}
 
 .hintlinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
 .hintlinks button{
@@ -176,9 +206,7 @@ textarea{resize:vertical;min-height:60px}
 }
 .secttl::after{content:"";flex:1;height:1px;background:var(--line)}
 
-.dayline{
-  display:flex;align-items:center;gap:12px;margin:22px 0 12px;
-}
+.dayline{display:flex;align-items:center;gap:12px;margin:22px 0 12px}
 .dayline:first-child{margin-top:0}
 .daytag{
   flex:none;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;letter-spacing:.1em;
@@ -186,6 +214,38 @@ textarea{resize:vertical;min-height:60px}
 }
 .dayline .rule{flex:1;height:1px;background:var(--line)}
 .dayline .sub{font-size:12.5px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px}
+.toolbar .mini{padding:6px 13px;font-size:13px}
+.toolbar .mini.act{border-color:var(--accent);color:var(--accent)}
+.toolbar .mini:disabled{opacity:.55;cursor:default}
+.hint{font-size:12.5px;color:var(--muted);margin:8px 0 0;line-height:1.55}
+.hint.warn{color:var(--warn)}
+
+.ins{display:grid;grid-template-columns:44px minmax(0,1fr);}
+.ins .rail{position:relative}
+.ins .rail::before{content:"";position:absolute;left:20px;top:0;bottom:0;width:2px;background:var(--rail)}
+.insbtn{
+  align-self:center;background:none;border:1px dashed var(--line);border-radius:8px;
+  padding:3px 11px;font-size:12px;color:var(--muted);margin:2px 0 8px;justify-self:start;
+}
+.insbtn:hover{border-color:var(--accent);color:var(--accent)}
+.insform{background:var(--surface);border:1px solid var(--accent);border-radius:11px;padding:12px 14px;margin-bottom:10px}
+.insform input{margin-bottom:9px}
+.insform .kinds{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap}
+.insform .kinds button{
+  border:1px solid var(--line);background:var(--surface-2);border-radius:999px;
+  padding:4px 12px;font-size:13px;color:var(--muted);
+}
+.insform .kinds button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:500}
+.insform .go{display:flex;gap:8px;justify-content:flex-end}
+
+.maps{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.maps a{
+  font-size:12px;color:var(--info);text-decoration:none;border:1px solid var(--line);
+  border-radius:6px;padding:2px 9px;
+}
+.maps a:hover{border-color:var(--info);background:var(--info-soft)}
 
 /* timeline */
 .timeline{display:flex;flex-direction:column}
@@ -219,23 +279,27 @@ textarea{resize:vertical;min-height:60px}
 .ctime{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--accent);flex:none}
 .stop[data-kind="transit"] .ctime{color:var(--muted)}
 .cname{font-family:"Noto Serif TC",serif;font-weight:700;font-size:17px;flex:1;min-width:140px;line-height:1.35}
-.stop[data-kind="transit"] .cname{font-family:"Noto Sans TC",sans-serif;font-size:14.5px;font-weight:500;color:var(--muted)}
+html[lang="en"] .cname,html[lang="fr"] .cname{font-family:Georgia,serif}
+html[lang="ja"] .cname{font-family:"Noto Sans JP",sans-serif}
+.stop[data-kind="transit"] .cname{font-family:inherit;font-size:14.5px;font-weight:500;color:var(--muted)}
 .cost{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:500;white-space:nowrap}
 .cost small{font-size:11px;color:var(--muted);font-weight:400;margin-left:3px}
 .cost.free{color:var(--good)}
 
 .crow{display:flex;gap:8px;margin-top:9px;font-size:13.5px;line-height:1.6}
 .crow .k{
-  flex:none;width:60px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.06em;
+  flex:none;width:64px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.04em;
   color:var(--muted);padding-top:3px;text-transform:uppercase;
 }
 .crow .v{flex:1;min-width:0}
+html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
 .crow.rain .v{color:var(--warn)}
 .notes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .note{font-size:12px;padding:2px 8px;border-radius:5px;background:var(--good-soft);color:var(--good)}
 .note.book{background:var(--accent-soft);color:var(--accent)}
 .flag{font-size:11.5px;padding:3px 9px;border-radius:5px;background:var(--surface-2);color:var(--muted);border:1px dashed var(--rail)}
 .flag.warn{background:var(--warn-soft);color:var(--warn);border:1px solid transparent}
+
 .cands{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line)}
 .cands .h{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--good);margin-bottom:7px}
 .cands.none .h{color:var(--muted)}
@@ -244,6 +308,8 @@ textarea{resize:vertical;min-height:60px}
 .cand .n{font-weight:500}
 .cand .s{font-size:12px;color:var(--info);text-decoration:none;border-bottom:1px solid currentColor;white-space:nowrap;margin-left:4px}
 .cand .s:hover{opacity:.75}
+.checking{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-top:10px}
+
 .book{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line)}
 .book .h{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--info);margin-bottom:8px}
 .book .row{display:flex;flex-wrap:wrap;gap:8px}
@@ -253,21 +319,14 @@ textarea{resize:vertical;min-height:60px}
 }
 .book a:hover{background:var(--info-soft)}
 .book .why{margin-top:8px;font-size:12.5px;color:var(--muted);line-height:1.55}
-.checking{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-top:10px}
+
 .cfoot{display:flex;justify-content:flex-end;margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
-.mini{
-  background:none;border:1px solid var(--line);border-radius:7px;padding:3px 10px;
-  font-size:12.5px;color:var(--muted);
-}
+.mini{background:none;border:1px solid var(--line);border-radius:7px;padding:3px 10px;font-size:12.5px;color:var(--muted)}
 .mini:hover{border-color:var(--accent);color:var(--accent)}
 
-/* extras */
 .extras{display:grid;gap:10px;grid-template-columns:1fr}
 @media (min-width:640px){ .extras{grid-template-columns:1fr 1fr} }
-.xcard{
-  background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:13px 15px;
-  display:flex;flex-direction:column;gap:6px;
-}
+.xcard{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:13px 15px;display:flex;flex-direction:column;gap:6px}
 .xcard h3{font-size:15.5px}
 .xcard p{margin:0;font-size:13.5px;color:var(--muted)}
 .xcard .xf{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
@@ -275,16 +334,8 @@ textarea{resize:vertical;min-height:60px}
 .tips{margin:0;padding-left:18px;font-size:13.5px;color:var(--muted)}
 .tips li{margin-bottom:5px}
 
-/* totals bar */
-.totals{
-  position:fixed;left:0;right:0;bottom:0;z-index:20;
-  background:var(--surface);border-top:1px solid var(--line);
-  box-shadow:0 -6px 22px -18px rgba(0,0,0,.6);
-}
-.totals-in{
-  max-width:1180px;margin:0 auto;padding:11px 20px;
-  display:flex;align-items:center;gap:14px 22px;flex-wrap:wrap;
-}
+.totals{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 22px -18px rgba(0,0,0,.6)}
+.totals-in{max-width:1180px;margin:0 auto;padding:11px 20px;display:flex;align-items:center;gap:14px 22px;flex-wrap:wrap}
 .tbreak{display:flex;gap:16px;flex-wrap:wrap;flex:1;min-width:180px}
 .tb{display:flex;flex-direction:column;line-height:1.25}
 .tb .lab{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -293,26 +344,41 @@ textarea{resize:vertical;min-height:60px}
 .budget{font-size:12.5px;padding:4px 10px;border-radius:6px;background:var(--good-soft);color:var(--good)}
 .budget.over{background:var(--warn-soft);color:var(--warn)}
 
-/* loading */
 .loading{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:30px 26px;box-shadow:var(--shadow)}
 .loading h2{font-size:18px;margin-bottom:6px}
 .loading p{margin:0 0 18px;color:var(--muted);font-size:13.5px}
 .bars{display:flex;flex-direction:column;gap:10px}
 .bar{height:11px;border-radius:5px;background:var(--surface-2);overflow:hidden;position:relative}
-.bar::after{
-  content:"";position:absolute;inset:0;transform:translateX(-100%);
-  background:linear-gradient(90deg,transparent,var(--accent-soft),transparent);
-  animation:sweep 1.5s infinite;
-}
+.bar::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,var(--accent-soft),transparent);animation:sweep 1.5s infinite}
 .bar:nth-child(2){width:78%} .bar:nth-child(3){width:88%} .bar:nth-child(4){width:60%}
-.bar:nth-child(2)::after{animation-delay:.15s} .bar:nth-child(3)::after{animation-delay:.3s} .bar:nth-child(4)::after{animation-delay:.45s}
 @keyframes sweep{to{transform:translateX(100%)}}
 @media (prefers-reduced-motion:reduce){ .bar::after,.pulse{animation:none} *{transition:none!important} }
 .err{border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:10px;background:var(--surface);padding:16px 18px}
 .err h2{font-size:16px;margin-bottom:6px}
 .err p{margin:0;font-size:14px;color:var(--muted)}
-</style>
 
+/* ---------- 列印（Cmd+P → 存成 PDF）---------- */
+@media print{
+  @page{margin:14mm 12mm}
+  html,body{background:#fff!important;color:#000!important}
+  .masthead .langs,.panel,.totals,.toolbar,.notice,.cfoot,.insbtn,.insform,
+  .maps,.checking,.empty,.loading{display:none!important}
+  .wrap{max-width:none;padding:0}
+  .cols{display:block}
+  .masthead{border-bottom:1px solid #999;margin-bottom:14px;padding:0 0 10px}
+  .stampline{display:none}
+  .card{box-shadow:none!important;border:1px solid #ccc;background:#fff!important;break-inside:avoid}
+  .stop{break-inside:avoid;page-break-inside:avoid}
+  .dayline{break-after:avoid}
+  .daytag{background:#000!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .trip-head h2{font-size:20px}
+  .cands,.book{border-top:1px dashed #bbb}
+  .cand .s{display:none}          /* 紙上點不了連結，留網址反而礙眼 */
+  .book .row{display:none}
+  a{color:#000!important;text-decoration:none}
+  .secttl::after{background:#ccc}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -320,94 +386,106 @@ textarea{resize:vertical;min-height:60px}
     <div class="brand">
       <div class="sig">順</div>
       <div>
-        <h1>順路走</h1>
-        <p>需求進去，一條走得完的路線出來</p>
+        <h1 data-i18n="brand">順路走</h1>
+        <p data-i18n="tagline">需求進去，一條走得完的路線出來</p>
       </div>
     </div>
     <div class="spacer"></div>
-    <div class="stampline" id="stamp">PROTOTYPE / v0.1</div>
+    <div class="headright">
+      <div class="stampline" id="stamp"></div>
+      <div class="langs" id="langs"></div>
+    </div>
   </header>
 
   <div class="cols">
     <form class="panel" id="form">
-      <h2>這趟想怎麼走</h2>
-      <p class="panel-sub">全部欄位都可以自由填，隨機也行。</p>
+      <h2 data-i18n="formTitle"></h2>
+      <p class="panel-sub" data-i18n="formSub"></p>
 
       <div class="duo">
         <div class="field">
-          <label for="from">出發地</label>
-          <div class="ac"><input type="text" id="from" value="台中高鐵站" autocomplete="off"></div>
-          <button type="button" class="locbtn" id="locBtn">用我現在的位置</button>
+          <label for="from" data-i18n="from"></label>
+          <div class="ac"><input type="text" id="from" autocomplete="off"></div>
+          <button type="button" class="locbtn" id="locBtn" data-i18n="useMyLocation"></button>
         </div>
         <div class="field">
-          <label for="to">目的地</label>
-          <div class="ac"><input type="text" id="to" value="台北" autocomplete="off"></div>
+          <label for="to" data-i18n="to"></label>
+          <div class="ac"><input type="text" id="to" autocomplete="off"></div>
         </div>
       </div>
 
       <div class="field">
-        <label for="food">想吃什麼</label>
-        <input type="text" id="food" value="義式料理">
+        <label for="food" data-i18n="food"></label>
+        <input type="text" id="food">
         <div class="hintlinks" id="foodHints"></div>
       </div>
 
       <div class="duo">
         <div class="field">
-          <label for="date">日期</label>
+          <label for="date" data-i18n="date"></label>
           <input type="date" id="date">
         </div>
         <div class="field">
-          <label for="start">出發時間</label>
+          <label for="start" data-i18n="startTime"></label>
           <input type="time" id="start" value="09:00">
         </div>
       </div>
 
       <div class="duo">
         <div class="field">
-          <label for="days">天數</label>
+          <label for="days" data-i18n="days"></label>
           <select id="days">
-            <option value="1">當日來回</option>
-            <option value="2">2 天 1 夜</option>
-            <option value="3">3 天 2 夜</option>
+            <option value="1" data-i18n="day1"></option>
+            <option value="2" data-i18n="day2"></option>
+            <option value="3" data-i18n="day3"></option>
           </select>
         </div>
         <div class="field">
-          <label for="people">人數</label>
+          <label for="people" data-i18n="people"></label>
           <input type="number" id="people" value="2" min="1" max="20">
         </div>
       </div>
 
       <div class="field">
-        <label for="budget">每人預算 NT$（整趟）</label>
+        <label for="budget" data-i18n="budget"></label>
         <input type="number" id="budget" value="3000" min="0" step="100">
       </div>
 
       <div class="grp">
-        <span class="lab">偏好交通方式</span>
+        <span class="lab" data-i18n="transport"></span>
         <div class="chips" id="transport"></div>
       </div>
 
       <div class="grp">
-        <span class="lab">特殊要求</span>
+        <span class="lab" data-i18n="needs"></span>
         <div class="chips" id="needs"></div>
       </div>
 
       <div class="grp">
-        <span class="lab">要包含</span>
+        <span class="lab" data-i18n="include"></span>
         <div class="chips" id="include"></div>
       </div>
 
       <div class="field">
-        <label for="notes">其他想說的</label>
-        <textarea id="notes" placeholder="例如：不想走太多路、想在六點前回到高鐵站、有帶長輩"></textarea>
+        <label for="notes" data-i18n="notesLabel"></label>
+        <textarea id="notes"></textarea>
       </div>
 
       <div class="actions">
-        <button type="submit" class="btn primary" id="go">排一條路線</button>
-        <button type="button" class="btn dice" id="dice" title="隨機填入">隨機</button>
+        <button type="submit" class="btn primary" id="go" data-i18n="go"></button>
+        <button type="button" class="btn dice" id="dice" data-i18n="dice"></button>
       </div>
       <div class="actions" style="margin-top:9px">
-        <button type="button" class="btn" id="stop" hidden style="flex:1">停止</button>
+        <button type="button" class="btn" id="stop" hidden style="flex:1" data-i18n="stopBtn"></button>
+      </div>
+
+      <div class="saved">
+        <div class="saved-head">
+          <span class="lab" data-i18n="myTrips"></span>
+          <button type="button" class="mini" id="importBtn" data-i18n="importJson"></button>
+          <input type="file" id="importFile" accept="application/json,.json" hidden>
+        </div>
+        <div id="savedList"></div>
       </div>
     </form>
 
@@ -418,9 +496,9 @@ textarea{resize:vertical;min-height:60px}
 <div class="totals" id="totals" hidden>
   <div class="totals-in">
     <div class="tbreak" id="tbreak"></div>
-    <div class="tb big"><span class="lab">每人合計</span><span class="val mono" id="perHead">NT$0</span></div>
-    <div class="tb"><span class="lab">全團</span><span class="val mono" id="grand">NT$0</span></div>
-    <span class="budget" id="budgetChip">預算內</span>
+    <div class="tb big"><span class="lab" data-i18n="perPerson"></span><span class="val mono" id="perHead">NT$0</span></div>
+    <div class="tb"><span class="lab" data-i18n="groupTotal"></span><span class="val mono" id="grand">NT$0</span></div>
+    <span class="budget" id="budgetChip"></span>
   </div>
 </div>
 
@@ -428,15 +506,392 @@ textarea{resize:vertical;min-height:60px}
 (function(){
   "use strict";
 
-  var TRANSPORT = ["高鐵","台鐵","捷運","公車","計程車 / Uber","步行","YouBike","自行開車","客運"];
-  var NEEDS = ["不吃辣","素食","無障礙","要開發票","帶小孩","帶寵物","不想排隊","不喝酒"];
-  var INCLUDE = ["打卡景點","住宿","私房景點","雨天備案","伴手禮"];
-  var FOODS = ["義式料理","日式居酒屋","小吃夜市","川菜","早午餐","素食","泰式","燒肉","海鮮"];
-  var CITIES = ["台北","台中","台南","高雄","宜蘭","花蓮","嘉義","新竹","台東","屏東"];
-  var ORIGINS = ["台中高鐵站","台北車站","桃園機場","左營高鐵站","板橋車站","新竹高鐵站","台南火車站"];
+  /* ==================== 語言 ==================== */
 
-  var KIND_LABEL = {transit:"交通",food:"用餐",sight:"景點",stay:"住宿",other:"行程"};
-  var COST_GROUP = {transit:"交通",food:"餐飲",sight:"門票",stay:"住宿",other:"其他"};
+  var I18N = {
+    "zh-TW": {
+      label:"中文", htmlLang:"zh-Hant",
+      brand:"順路走", tagline:"需求進去，一條走得完的路線出來",
+      formTitle:"這趟想怎麼走", formSub:"全部欄位都可以自由填，隨機也行。",
+      from:"出發地", to:"目的地", useMyLocation:"用我現在的位置",
+      food:"想吃什麼", date:"日期", startTime:"出發時間",
+      days:"天數", day1:"當日來回", day2:"2 天 1 夜", day3:"3 天 2 夜",
+      people:"人數", budget:"每人預算 NT$（整趟）",
+      transport:"偏好交通方式", needs:"特殊要求", include:"要包含",
+      notesLabel:"其他想說的",
+      notesPh:"例如：不想走太多路、想在六點前回到高鐵站、有帶長輩",
+      go:"排一條路線", dice:"隨機", stopBtn:"停止",
+      perPerson:"每人合計", groupTotal:"全團",
+      defFrom:"台中高鐵站", defTo:"台北", defFood:"義式料理",
+      transportOpts:["高鐵","台鐵","捷運","公車","計程車 / Uber","步行","YouBike","自行開車","客運"],
+      needsOpts:["不吃辣","素食","無障礙","要開發票","帶小孩","帶寵物","不想排隊","不喝酒"],
+      includeOpts:["打卡景點","住宿","私房景點","雨天備案","伴手禮"],
+      foodOpts:["義式料理","日式居酒屋","小吃夜市","川菜","早午餐","素食","泰式","燒肉","海鮮"],
+      cities:["台北","台中","台南","高雄","宜蘭","花蓮","嘉義","新竹","台東","屏東"],
+      origins:["台中高鐵站","台北車站","桃園機場","左營高鐵站","板橋車站","新竹高鐵站","台南火車站"],
+      emptyTitle:"先填左邊，或直接看一份範例",
+      emptyBody:"填完按「排一條路線」，會產生含轉乘指引、營業時間、雨天備案與花費的行程；每一站都能移除，下面的金額會跟著重算。",
+      seeDemo:"看示範行程",
+      loadingTitle:"正在排路線…",
+      loadingBody:"查交通銜接、營業時間與花費，通常要 20 至 60 秒。",
+      loadingElapsed:function(s){ return "查交通銜接、營業時間與花費…已經 " + s + " 秒。"; },
+      noticeMockB:"模擬模式",
+      noticeMock:"MOCK_PLAN=1 開著，所以不論條件填什麼，回來的都是同一份固定的假行程。這個模式驗證的是版面、串流與費用重算，不是內容。",
+      noticeDemoB:"示範資料",
+      noticeDemo:"內建的固定假資料，用來看版面與互動。按「排一條路線」才會依你填的條件生成。",
+      noticeAIB:"AI 生成",
+      noticeAI:"標著「店名未查證」的，出發前務必自己確認一次 —— 店可能已經收了，或根本不是那個類型。營業時間、票價與出口編號同理。",
+      secRoute:"路線", secExtras:"私房 / 備選　可加可不加", secTips:"出門前",
+      dayN:function(n){ return "第 " + n + " 天"; },
+      kinds:{transit:"交通",food:"用餐",sight:"景點",stay:"住宿",other:"行程"},
+      groups:{transit:"交通",food:"餐飲",sight:"門票",stay:"住宿",other:"其他"},
+      units:{"每人":"每人","每組":"每組","每晚":"每人每晚"},
+      rowHowTo:"怎麼去", rowDetail:"內容", rowHours:"營業", rowRain:"雨天",
+      free:"免費", removeStop:"從行程移除", restoreStop:"放回行程",
+      addExtra:"加進行程", addedExtra:"已加入行程", addedNote:"後來加入",
+      flagGeneric:"未指名 · 到場再挑", flagUnverified:"店名未查證",
+      candsFound:"查到這幾家，資料來自下列來源", source:"來源",
+      candsNone:function(area){ return (area ? area : "") + "沒查到可靠的店家資料，到現場再挑"; },
+      checking:"正在搜尋實際存在的店家…",
+      pending:"正在排下一站…",
+      bookTitle:"查即時空房與房價",
+      bookWhen:function(ci,co,ppl){ return (ci ? ci + " 入住 · " + co + " 退房 · " : "") + ppl + " 人 · 條件已經帶好"; },
+      bookWhy:"上面那個金額只是估算 —— 房價與空房每天在動，早鳥價與是否含早餐都要看當下的頁面。",
+      noSpend:"沒有花費", spendNow:"目前",
+      budgetLeft:function(m){ return "距預算還有 " + m; },
+      budgetOver:function(m){ return "超出預算 " + m; },
+      tagRoundTrip:"當日來回",
+      tagDays:function(d){ return d + " 天 " + (d-1) + " 夜"; },
+      tagPeople:function(n){ return n + " 人"; },
+      tagNoDate:"日期未定",
+      errTitle:"沒有排出行程",
+      errs:{
+        bad_request:"條件有地方填得不太對，檢查一下人數跟預算。",
+        no_key:"伺服器還沒設定好 API 金鑰。",
+        no_workspace:"金鑰需要指定 workspace。",
+        rate_limited:"按太快了，等一分鐘再試。",
+        invalid_json:"這次回來的格式跑掉了，再按一次通常就好。",
+        empty_plan:"這次沒排出任何一站，把條件寫得更具體一點會比較穩。",
+        upstream_error:"連線出了點問題，稍後再試一次。",
+        timeout:"這次等太久了，再試一次。",
+        cancelled:"已停止。",
+        network:"連不上伺服器。"
+      },
+      locating:"定位中…", locDone:"已填入目前位置",
+      locDenied:"你拒絕了定位權限", locFail:"拿不到位置，手動填吧",
+      locNoSupport:"這個瀏覽器不支援定位", locNoKey:"伺服器未設定地圖金鑰",
+      insertHere:"在這裡插入一站", insertName:"要插入什麼？例如：咖啡廳、書店、公園",
+      insertKindFood:"用餐", insertKindSight:"景點", insertKindOther:"其他",
+      insertAdd:"加入", insertCancel:"取消",
+      replanBtn:"重排時間", replanning:"重排中…",
+      replanHint:"刪掉或插入站之後，按「重排時間」，後面的時間會跟著調整。",
+      replanFail:"重排失敗，時間維持原樣。",
+      printBtn:"列印 / 存成 PDF",
+      mapOpen:"地圖", mapNav:"導航",
+      myTrips:"我的行程", saveTrip:"儲存", tripSaved:"已儲存",
+      openTrip:"開啟", deleteTrip:"刪除", noSavedTrips:"還沒有存過行程",
+      exportJson:"匯出檔案", importJson:"匯入檔案", importFail:"這個檔案讀不出行程",
+      downloadPdf:"下載 PDF", pdfHint:"在跳出的視窗選「儲存為 PDF」（手機是分享→儲存到檔案）。",
+      downloadIcs:"加入行事曆", savedOn:"存於",
+      parking:"附近停車",
+      backendOff:"後端未連線"
+    },
+
+    en: {
+      label:"EN", htmlLang:"en",
+      brand:"Shunlu", tagline:"Tell it what you want. Get a route you can actually walk.",
+      formTitle:"How do you want to travel?", formSub:"Fill in what you know — or hit Random.",
+      from:"From", to:"To", useMyLocation:"Use my current location",
+      food:"What do you feel like eating?", date:"Date", startTime:"Start time",
+      days:"Length", day1:"Day trip", day2:"2 days, 1 night", day3:"3 days, 2 nights",
+      people:"Travellers", budget:"Budget per person (NT$, whole trip)",
+      transport:"Preferred transport", needs:"Special requirements", include:"Must include",
+      notesLabel:"Anything else",
+      notesPh:"e.g. not too much walking, back at the station by six, travelling with elderly parents",
+      go:"Plan my route", dice:"Random", stopBtn:"Stop",
+      perPerson:"Per person", groupTotal:"Whole group",
+      defFrom:"Taoyuan International Airport", defTo:"Taipei", defFood:"Local street food",
+      transportOpts:["High Speed Rail","TRA train","Metro / MRT","Bus","Taxi / Uber","Walking","YouBike","Rental car","Intercity coach"],
+      needsOpts:["No spicy food","Vegetarian","Step-free access","Need a receipt","With kids","With a pet","No long queues","No alcohol"],
+      includeOpts:["Photo spots","Accommodation","Off-the-beaten-path","Rainy-day backup","Souvenirs"],
+      foodOpts:["Local street food","Beef noodles","Night market","Vegetarian","Seafood","Brunch","Hot pot","Dim sum","Bubble tea"],
+      cities:["Taipei","Taichung","Tainan","Kaohsiung","Yilan","Hualien","Chiayi","Hsinchu","Taitung","Pingtung"],
+      origins:["Taoyuan International Airport","Taipei Main Station","Taichung HSR Station","Zuoying HSR Station","Songshan Airport","Banqiao Station","Tainan Railway Station"],
+      emptyTitle:"Fill in the form, or see a sample",
+      emptyBody:"You get a route with transfer directions, opening hours, a rainy-day backup and costs. Drop any stop and the total recalculates.",
+      seeDemo:"See a sample itinerary",
+      loadingTitle:"Planning your route…",
+      loadingBody:"Working out connections, opening hours and costs. Usually 20–60 seconds.",
+      loadingElapsed:function(s){ return "Working out connections, opening hours and costs… " + s + "s so far."; },
+      noticeMockB:"Mock mode",
+      noticeMock:"MOCK_PLAN=1 is on, so the same fixed sample itinerary comes back no matter what you enter. It exercises the layout, streaming and cost maths — not the content.",
+      noticeDemoB:"Sample data",
+      noticeDemo:"A fixed sample so you can see the layout. Press “Plan my route” for a real one.",
+      noticeAIB:"AI-generated",
+      noticeAI:"Anything marked “Name not verified” — check it yourself before you go. Places close, and sometimes they were never that kind of place. Same goes for hours, prices and exit numbers.",
+      secRoute:"Route", secExtras:"Optional extras", secTips:"Before you go",
+      dayN:function(n){ return "Day " + n; },
+      kinds:{transit:"Transit",food:"Food",sight:"Sight",stay:"Stay",other:"Other"},
+      groups:{transit:"Transport",food:"Food",sight:"Tickets",stay:"Lodging",other:"Other"},
+      units:{"每人":"per person","每組":"per group","每晚":"per person / night"},
+      rowHowTo:"Getting there", rowDetail:"What it is", rowHours:"Hours", rowRain:"If it rains",
+      free:"Free", removeStop:"Remove from route", restoreStop:"Put it back",
+      addExtra:"Add to route", addedExtra:"Added", addedNote:"Added later",
+      flagGeneric:"No specific venue · pick one there", flagUnverified:"Name not verified",
+      candsFound:"Real places found — sources below", source:"source",
+      candsNone:function(area){ return "No reliable listings found" + (area ? " in " + area : "") + " — pick one when you get there"; },
+      checking:"Searching for places that actually exist…",
+      pending:"Working out the next stop…",
+      bookTitle:"Check live availability and rates",
+      bookWhen:function(ci,co,ppl){ return (ci ? "Check in " + ci + " · out " + co + " · " : "") + ppl + " guest(s) · already filled in"; },
+      bookWhy:"The figure above is an estimate. Rates and availability move daily — early-bird pricing and whether breakfast is included are on the booking page, not here.",
+      noSpend:"Nothing yet", spendNow:"Now",
+      budgetLeft:function(m){ return m + " under budget"; },
+      budgetOver:function(m){ return m + " over budget"; },
+      tagRoundTrip:"Day trip",
+      tagDays:function(d){ return d + " days, " + (d-1) + " nights"; },
+      tagPeople:function(n){ return n + " traveller(s)"; },
+      tagNoDate:"No date set",
+      errTitle:"Couldn’t plan a route",
+      errs:{
+        bad_request:"Something in the form doesn’t look right — check travellers and budget.",
+        no_key:"The server has no API key configured.",
+        no_workspace:"The API key needs a workspace.",
+        rate_limited:"Too fast — wait a minute and try again.",
+        invalid_json:"That reply came back malformed. Pressing again usually fixes it.",
+        empty_plan:"No stops came back. Try being more specific.",
+        upstream_error:"Something went wrong upstream. Try again shortly.",
+        timeout:"That took too long. Try again.",
+        cancelled:"Stopped.",
+        network:"Can’t reach the server."
+      },
+      locating:"Locating…", locDone:"Filled in your location",
+      locDenied:"You declined location access", locFail:"Couldn’t get your location — type it in",
+      locNoSupport:"This browser can’t do location", locNoKey:"No map key on the server",
+      insertHere:"Insert a stop here", insertName:"What goes here? e.g. a café, a bookshop, a park",
+      insertKindFood:"Food", insertKindSight:"Sight", insertKindOther:"Other",
+      insertAdd:"Add", insertCancel:"Cancel",
+      replanBtn:"Re-time the route", replanning:"Re-timing…",
+      replanHint:"After removing or inserting a stop, press “Re-time the route” so everything after it shifts too.",
+      replanFail:"Couldn’t re-time. Times left as they were.",
+      printBtn:"Print / Save as PDF",
+      mapOpen:"Map", mapNav:"Directions",
+      myTrips:"My itineraries", saveTrip:"Save", tripSaved:"Saved",
+      openTrip:"Open", deleteTrip:"Delete", noSavedTrips:"Nothing saved yet",
+      exportJson:"Export file", importJson:"Import file", importFail:"No itinerary in that file",
+      downloadPdf:"Download PDF", pdfHint:"Pick “Save as PDF” in the dialog that opens (on phones: Share → Save to Files).",
+      downloadIcs:"Add to calendar", savedOn:"saved",
+      parking:"Parking nearby",
+      backendOff:"Backend offline"
+    },
+
+    fr: {
+      label:"FR", htmlLang:"fr",
+      brand:"Shunlu", tagline:"Dites ce que vous voulez. Recevez un itinéraire réellement faisable.",
+      formTitle:"Comment voulez-vous voyager ?", formSub:"Remplissez ce que vous savez — ou tirez au sort.",
+      from:"Départ", to:"Destination", useMyLocation:"Utiliser ma position actuelle",
+      food:"Envie de manger quoi ?", date:"Date", startTime:"Heure de départ",
+      days:"Durée", day1:"À la journée", day2:"2 jours, 1 nuit", day3:"3 jours, 2 nuits",
+      people:"Voyageurs", budget:"Budget par personne (NT$, séjour entier)",
+      transport:"Transports préférés", needs:"Contraintes particulières", include:"À inclure",
+      notesLabel:"Autre chose",
+      notesPh:"ex. peu de marche, retour à la gare avant 18 h, je voyage avec mes parents âgés",
+      go:"Composer l’itinéraire", dice:"Au hasard", stopBtn:"Arrêter",
+      perPerson:"Par personne", groupTotal:"Groupe entier",
+      defFrom:"Aéroport international de Taoyuan", defTo:"Taipei", defFood:"Street food locale",
+      transportOpts:["Train à grande vitesse","Train TRA","Métro / MRT","Bus","Taxi / Uber","À pied","YouBike","Voiture de location","Autocar"],
+      needsOpts:["Sans piment","Végétarien","Accès sans marches","Facture nécessaire","Avec enfants","Avec un animal","Éviter les files","Sans alcool"],
+      includeOpts:["Spots photo","Hébergement","Lieux méconnus","Plan B si pluie","Souvenirs"],
+      foodOpts:["Street food locale","Nouilles au bœuf","Marché de nuit","Végétarien","Fruits de mer","Brunch","Fondue chinoise","Dim sum","Bubble tea"],
+      cities:["Taipei","Taichung","Tainan","Kaohsiung","Yilan","Hualien","Chiayi","Hsinchu","Taitung","Pingtung"],
+      origins:["Aéroport international de Taoyuan","Gare centrale de Taipei","Gare THSR de Taichung","Gare THSR de Zuoying","Aéroport de Songshan","Gare de Banqiao","Gare de Tainan"],
+      emptyTitle:"Remplissez le formulaire, ou voyez un exemple",
+      emptyBody:"Vous obtenez un itinéraire avec les correspondances, les horaires, un plan B en cas de pluie et les coûts. Retirez une étape et le total se recalcule.",
+      seeDemo:"Voir un exemple",
+      loadingTitle:"Composition de l’itinéraire…",
+      loadingBody:"Correspondances, horaires et coûts. Compte 20 à 60 secondes.",
+      loadingElapsed:function(s){ return "Correspondances, horaires et coûts… " + s + " s écoulées."; },
+      noticeMockB:"Mode simulation",
+      noticeMock:"MOCK_PLAN=1 est actif : le même itinéraire fictif revient quelles que soient vos réponses. Ce mode teste la mise en page, le streaming et les calculs — pas le contenu.",
+      noticeDemoB:"Données d’exemple",
+      noticeDemo:"Un exemple figé pour voir la mise en page. Cliquez sur « Composer l’itinéraire » pour un vrai.",
+      noticeAIB:"Généré par IA",
+      noticeAI:"Tout ce qui porte « Nom non vérifié » : vérifiez-le vous-même avant de partir. Des établissements ferment, et parfois ce n’était pas ce type de lieu. Idem pour les horaires, les tarifs et les numéros de sortie.",
+      secRoute:"Itinéraire", secExtras:"Options à ajouter", secTips:"Avant de partir",
+      dayN:function(n){ return "Jour " + n; },
+      kinds:{transit:"Transport",food:"Repas",sight:"Visite",stay:"Nuit",other:"Autre"},
+      groups:{transit:"Transport",food:"Repas",sight:"Entrées",stay:"Hébergement",other:"Autre"},
+      units:{"每人":"par personne","每組":"par groupe","每晚":"par pers. / nuit"},
+      rowHowTo:"Y aller", rowDetail:"Détails", rowHours:"Horaires", rowRain:"S’il pleut",
+      free:"Gratuit", removeStop:"Retirer de l’itinéraire", restoreStop:"Remettre",
+      addExtra:"Ajouter à l’itinéraire", addedExtra:"Ajouté", addedNote:"Ajouté après coup",
+      flagGeneric:"Pas de nom précis · à choisir sur place", flagUnverified:"Nom non vérifié",
+      candsFound:"Établissements réels trouvés — sources ci-dessous", source:"source",
+      candsNone:function(area){ return "Rien de fiable trouvé" + (area ? " à " + area : "") + " — choisissez sur place"; },
+      checking:"Recherche d’établissements réellement existants…",
+      pending:"Étape suivante en cours…",
+      bookTitle:"Voir les disponibilités et tarifs en direct",
+      bookWhen:function(ci,co,ppl){ return (ci ? "Arrivée " + ci + " · départ " + co + " · " : "") + ppl + " voyageur(s) · déjà renseigné"; },
+      bookWhy:"Le montant ci-dessus est une estimation. Les tarifs et disponibilités bougent chaque jour — les tarifs en réservation anticipée et le petit-déjeuner figurent sur la page de réservation, pas ici.",
+      noSpend:"Rien pour l’instant", spendNow:"Actuel",
+      budgetLeft:function(m){ return m + " sous le budget"; },
+      budgetOver:function(m){ return m + " au-dessus du budget"; },
+      tagRoundTrip:"À la journée",
+      tagDays:function(d){ return d + " jours, " + (d-1) + " nuits"; },
+      tagPeople:function(n){ return n + " voyageur(s)"; },
+      tagNoDate:"Date non fixée",
+      errTitle:"Itinéraire impossible",
+      errs:{
+        bad_request:"Quelque chose ne va pas dans le formulaire — vérifiez le nombre de voyageurs et le budget.",
+        no_key:"Aucune clé API configurée sur le serveur.",
+        no_workspace:"La clé API a besoin d’un workspace.",
+        rate_limited:"Trop rapide — attendez une minute.",
+        invalid_json:"La réponse est arrivée malformée. Réessayez, ça passe en général.",
+        empty_plan:"Aucune étape n’est revenue. Soyez plus précis.",
+        upstream_error:"Problème en amont. Réessayez dans un instant.",
+        timeout:"Trop long cette fois. Réessayez.",
+        cancelled:"Arrêté.",
+        network:"Serveur injoignable."
+      },
+      locating:"Localisation…", locDone:"Position renseignée",
+      locDenied:"Vous avez refusé la géolocalisation", locFail:"Position introuvable — saisissez-la",
+      locNoSupport:"Ce navigateur ne gère pas la géolocalisation", locNoKey:"Pas de clé cartographique sur le serveur",
+      insertHere:"Insérer une étape ici", insertName:"Quoi ici ? ex. un café, une librairie, un parc",
+      insertKindFood:"Repas", insertKindSight:"Visite", insertKindOther:"Autre",
+      insertAdd:"Ajouter", insertCancel:"Annuler",
+      replanBtn:"Recalculer les horaires", replanning:"Recalcul…",
+      replanHint:"Après avoir retiré ou inséré une étape, cliquez sur « Recalculer les horaires » : la suite se décale.",
+      replanFail:"Recalcul impossible. Les horaires restent inchangés.",
+      printBtn:"Imprimer / PDF",
+      mapOpen:"Carte", mapNav:"Trajet",
+      myTrips:"Mes itinéraires", saveTrip:"Enregistrer", tripSaved:"Enregistré",
+      openTrip:"Ouvrir", deleteTrip:"Supprimer", noSavedTrips:"Rien d’enregistré",
+      exportJson:"Exporter", importJson:"Importer", importFail:"Aucun itinéraire dans ce fichier",
+      downloadPdf:"Télécharger en PDF", pdfHint:"Choisissez « Enregistrer au format PDF » dans la fenêtre qui s’ouvre (sur mobile : Partager → Enregistrer dans Fichiers).",
+      downloadIcs:"Ajouter au calendrier", savedOn:"enregistré le",
+      parking:"Stationnement",
+      backendOff:"Serveur hors ligne"
+    },
+
+    ja: {
+      label:"日本語", htmlLang:"ja",
+      brand:"順路走", tagline:"条件を入れるだけで、実際に歩ける道順が出てきます。",
+      formTitle:"どんな旅にしますか", formSub:"わかる範囲でどうぞ。ランダムでも構いません。",
+      from:"出発地", to:"目的地", useMyLocation:"現在地を使う",
+      food:"何が食べたいですか", date:"日付", startTime:"出発時刻",
+      days:"日数", day1:"日帰り", day2:"1泊2日", day3:"2泊3日",
+      people:"人数", budget:"1人あたり予算（NT$・旅程全体）",
+      transport:"希望する交通手段", needs:"特別な条件", include:"入れてほしいもの",
+      notesLabel:"その他の希望",
+      notesPh:"例：あまり歩きたくない／18時までに駅へ戻りたい／高齢の親と一緒",
+      go:"ルートを組む", dice:"ランダム", stopBtn:"停止",
+      perPerson:"1人あたり", groupTotal:"全員分",
+      defFrom:"桃園国際空港", defTo:"台北", defFood:"台湾のローカルグルメ",
+      transportOpts:["台湾高鐵","台鐵","MRT（地下鉄）","バス","タクシー / Uber","徒歩","YouBike","レンタカー","高速バス"],
+      needsOpts:["辛いものは苦手","ベジタリアン","段差なし","領収書が必要","子ども連れ","ペット同伴","行列は避けたい","お酒なし"],
+      includeOpts:["写真映えスポット","宿泊","穴場","雨天プラン","おみやげ"],
+      foodOpts:["台湾のローカルグルメ","牛肉麺","夜市","ベジタリアン","海鮮","ブランチ","火鍋","飲茶","タピオカ"],
+      cities:["台北","台中","台南","高雄","宜蘭","花蓮","嘉義","新竹","台東","屏東"],
+      origins:["桃園国際空港","台北駅","台中高鐵駅","左営高鐵駅","松山空港","板橋駅","台南駅"],
+      emptyTitle:"左側に入力するか、サンプルをご覧ください",
+      emptyBody:"乗換案内・営業時間・雨天プラン・費用まで入ったルートが出ます。どの立ち寄り先も外せて、合計はその場で再計算されます。",
+      seeDemo:"サンプルを見る",
+      loadingTitle:"ルートを組んでいます…",
+      loadingBody:"乗換・営業時間・費用を調べています。だいたい20〜60秒です。",
+      loadingElapsed:function(s){ return "乗換・営業時間・費用を確認中…" + s + "秒経過。"; },
+      noticeMockB:"シミュレーションモード",
+      noticeMock:"MOCK_PLAN=1 が有効なため、何を入力しても同じ固定のサンプル行程が返ります。このモードで確認できるのはレイアウト・ストリーミング・費用計算であって、内容ではありません。",
+      noticeDemoB:"サンプルデータ",
+      noticeDemo:"レイアウト確認用の固定サンプルです。「ルートを組む」を押すと実際の行程が出ます。",
+      noticeAIB:"AI 生成",
+      noticeAI:"「店名未確認」と付いているものは、出発前にご自身で確認してください。閉店していることも、そもそも違う業態のこともあります。営業時間・料金・出口番号も同様です。",
+      secRoute:"ルート", secExtras:"追加候補", secTips:"出かける前に",
+      dayN:function(n){ return n + "日目"; },
+      kinds:{transit:"移動",food:"食事",sight:"観光",stay:"宿泊",other:"その他"},
+      groups:{transit:"交通費",food:"飲食",sight:"入場料",stay:"宿泊",other:"その他"},
+      units:{"每人":"1人あたり","每組":"1組あたり","每晚":"1人1泊"},
+      rowHowTo:"行き方", rowDetail:"内容", rowHours:"営業時間", rowRain:"雨天時",
+      free:"無料", removeStop:"ルートから外す", restoreStop:"戻す",
+      addExtra:"ルートに追加", addedExtra:"追加済み", addedNote:"後から追加",
+      flagGeneric:"店名なし · 現地で選ぶ", flagUnverified:"店名未確認",
+      candsFound:"実在する店が見つかりました（出典は下記）", source:"出典",
+      candsNone:function(area){ return (area ? area + "で" : "") + "信頼できる店舗情報が見つかりませんでした。現地で選んでください"; },
+      checking:"実在する店を検索しています…",
+      pending:"次の立ち寄り先を検討中…",
+      bookTitle:"空室と料金をリアルタイムで確認",
+      bookWhen:function(ci,co,ppl){ return (ci ? ci + " チェックイン · " + co + " チェックアウト · " : "") + ppl + "名 · 条件は入力済み"; },
+      bookWhy:"上の金額はあくまで概算です。料金と空室は毎日変わります。早割や朝食の有無は予約ページでご確認ください。",
+      noSpend:"まだ費用なし", spendNow:"現在",
+      budgetLeft:function(m){ return "予算まであと " + m; },
+      budgetOver:function(m){ return "予算超過 " + m; },
+      tagRoundTrip:"日帰り",
+      tagDays:function(d){ return (d-1) + "泊" + d + "日"; },
+      tagPeople:function(n){ return n + "名"; },
+      tagNoDate:"日付未定",
+      errTitle:"ルートを作れませんでした",
+      errs:{
+        bad_request:"入力に不備があります。人数と予算をご確認ください。",
+        no_key:"サーバーに API キーが設定されていません。",
+        no_workspace:"API キーに workspace の指定が必要です。",
+        rate_limited:"操作が早すぎます。1分ほど待ってください。",
+        invalid_json:"返ってきた形式が崩れました。もう一度押せばたいてい直ります。",
+        empty_plan:"立ち寄り先が返りませんでした。条件をもう少し具体的に。",
+        upstream_error:"接続に問題が起きました。しばらくして再試行してください。",
+        timeout:"時間がかかりすぎました。もう一度お試しください。",
+        cancelled:"停止しました。",
+        network:"サーバーに接続できません。"
+      },
+      locating:"位置情報を取得中…", locDone:"現在地を入力しました",
+      locDenied:"位置情報が許可されませんでした", locFail:"位置を取得できません。手入力してください",
+      locNoSupport:"このブラウザは位置情報に対応していません", locNoKey:"サーバーに地図キーがありません",
+      insertHere:"ここに立ち寄り先を追加", insertName:"何を入れますか？例：カフェ、書店、公園",
+      insertKindFood:"食事", insertKindSight:"観光", insertKindOther:"その他",
+      insertAdd:"追加", insertCancel:"キャンセル",
+      replanBtn:"時間を組み直す", replanning:"組み直し中…",
+      replanHint:"立ち寄り先を外したり足したりしたら「時間を組み直す」を押すと、以降の時刻もずれます。",
+      replanFail:"組み直せませんでした。時刻はそのままです。",
+      printBtn:"印刷 / PDFで保存",
+      mapOpen:"地図", mapNav:"経路",
+      myTrips:"保存した行程", saveTrip:"保存", tripSaved:"保存しました",
+      openTrip:"開く", deleteTrip:"削除", noSavedTrips:"まだ保存された行程はありません",
+      exportJson:"ファイルに書き出す", importJson:"ファイルから読み込む", importFail:"このファイルに行程が見つかりません",
+      downloadPdf:"PDFをダウンロード", pdfHint:"開いたウィンドウで「PDFとして保存」を選んでください（スマホは共有→ファイルに保存）。",
+      downloadIcs:"カレンダーに追加", savedOn:"保存日",
+      parking:"周辺の駐車場",
+      backendOff:"バックエンド未接続"
+    }
+  };
+
+  var LANGS = ["zh-TW","en","fr","ja"];
+
+  /**
+   * 裝置語言判斷。中文一律走繁中（我們的內容是台灣的），
+   * 日文、法文各自對應，其餘一律英文 —— 對外國旅客來說，
+   * 看不懂的繁中比英文糟得多。
+   */
+  function detectLang(){
+    try {
+      var saved = localStorage.getItem("shunlu.lang");
+      if (saved && I18N[saved]) return saved;
+    } catch (e) { /* 無痕模式等情況，忽略 */ }
+
+    var list = navigator.languages && navigator.languages.length
+      ? navigator.languages : [navigator.language || "en"];
+    for (var i = 0; i < list.length; i++){
+      var code = String(list[i] || "").toLowerCase();
+      if (code.indexOf("zh") === 0) return "zh-TW";
+      if (code.indexOf("ja") === 0) return "ja";
+      if (code.indexOf("fr") === 0) return "fr";
+      if (code.indexOf("en") === 0) return "en";
+    }
+    return "en";
+  }
+
+  var LANG = detectLang();
+  function L(){ return I18N[LANG]; }
+  function t(k){ return L()[k]; }
+
+  /* ==================== 共用小工具 ==================== */
 
   var out = document.getElementById("out");
   var form = document.getElementById("form");
@@ -446,76 +901,58 @@ textarea{resize:vertical;min-height:60px}
 
   var state = null, ctl = null, timer = null;
 
-  /* ---------- helpers ---------- */
   function esc(s){
     return String(s == null ? "" : s)
       .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
       .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
+  function money(n){ return "NT$" + Math.round(Number(n)||0).toLocaleString("en-US"); }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
   function pad2(n){ return (n < 10 ? "0" : "") + n; }
+  function unit(u){ return L().units[u] || u; }
 
-  /** ISO 日期加 n 天。給空字串或壞值就回空字串，連結照樣能用，只是不帶日期 */
   function addDays(iso, n){
     if (!iso) return "";
     var d = new Date(iso + "T00:00:00");
     if (isNaN(d.getTime())) return "";
     d.setDate(d.getDate() + n);
-    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+    return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
   }
 
-  /**
-   * 住宿不給店名，給一個「條件已經帶好」的訂房搜尋連結。
-   * 房價與空房每天在動，給一個可能已停業的旅館名字不如讓人去看即時的。
-   * （之後要做分潤，在 Booking 網址加上 &aid=你的聯盟編號即可，體驗不變。）
-   */
-  function bookingBlock(f, s){
-    if (s.kind !== "stay") return "";
-    var where = [f.to, s.area].filter(Boolean).join(" ");
-    var checkin = addDays(f.date, s.day - 1);
-    var checkout = addDays(f.date, s.day);
+  /* ==================== 表單建構 ==================== */
 
-    var booking = "https://www.booking.com/searchresults.zh-tw.html?ss=" + encodeURIComponent(where) +
-      (checkin ? "&checkin=" + checkin + "&checkout=" + checkout : "") +
-      "&group_adults=" + f.people + "&no_rooms=1&group_children=0";
-    var google = "https://www.google.com/travel/search?q=" + encodeURIComponent(where + " 住宿");
-
-    var when = checkin ? checkin + " 入住 · " + checkout + " 退房 · " : "";
-
-    return '<div class="book"><div class="h">查即時空房與房價</div>' +
-      '<div class="row">' +
-        '<a href="' + esc(booking) + '" target="_blank" rel="noopener">Booking.com</a>' +
-        '<a href="' + esc(google) + '" target="_blank" rel="noopener">Google 住宿</a>' +
-      '</div>' +
-      '<div class="why">' + esc(when + f.people + " 人 · 條件已經帶好") + '。' +
-      '上面那個金額只是估算 —— 房價與空房每天在動，早鳥價與是否含早餐都要看當下的頁面。</div>' +
-      '</div>';
-  }
-
-  function money(n){ return "NT$" + Math.round(Number(n)||0).toLocaleString("en-US"); }
-  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
-
-  function buildChips(host, items, preset){
-    host.innerHTML = items.map(function(t){
-      var on = preset.indexOf(t) > -1;
+  function buildChips(host, items, presetIdx){
+    host.innerHTML = items.map(function(text, i){
+      var on = presetIdx.indexOf(i) > -1;
       return '<label class="chip' + (on ? ' on' : '') + '">' +
-             '<input type="checkbox" value="' + esc(t) + '"' + (on ? ' checked' : '') + '>' + esc(t) + '</label>';
+             '<input type="checkbox" value="' + esc(text) + '"' + (on ? ' checked' : '') + '>' +
+             esc(text) + '</label>';
     }).join("");
-    host.addEventListener("change", function(e){
-      if (e.target.tagName === "INPUT") e.target.parentNode.classList.toggle("on", e.target.checked);
-    });
   }
   function chipValues(host){
     return Array.prototype.slice.call(host.querySelectorAll("input:checked")).map(function(i){ return i.value; });
   }
+  function chipCheckedIdx(host){
+    var boxes = host.querySelectorAll("input"), out = [];
+    for (var i = 0; i < boxes.length; i++) if (boxes[i].checked) out.push(i);
+    return out;
+  }
 
-  buildChips(document.getElementById("transport"), TRANSPORT, ["高鐵","捷運","步行"]);
-  buildChips(document.getElementById("needs"), NEEDS, ["不吃辣","要開發票"]);
-  buildChips(document.getElementById("include"), INCLUDE, ["打卡景點","私房景點","雨天備案"]);
+  var elTransport = document.getElementById("transport");
+  var elNeeds = document.getElementById("needs");
+  var elInclude = document.getElementById("include");
 
-  document.getElementById("foodHints").innerHTML =
-    FOODS.slice(0,6).map(function(f){ return '<button type="button" data-f="' + esc(f) + '">' + esc(f) + '</button>'; }).join("");
-  document.getElementById("foodHints").addEventListener("click", function(e){
-    if (e.target.dataset.f) document.getElementById("food").value = e.target.dataset.f;
+  // 用索引記選取狀態，切語言時才對得回去（文字會變，位置不會）
+  var pickedTransport = [0,2,5], pickedNeeds = [0,3], pickedInclude = [0,2,3];
+
+  [elTransport, elNeeds, elInclude].forEach(function(host){
+    host.addEventListener("change", function(e){
+      if (e.target.tagName !== "INPUT") return;
+      e.target.parentNode.classList.toggle("on", e.target.checked);
+      pickedTransport = chipCheckedIdx(elTransport);
+      pickedNeeds = chipCheckedIdx(elNeeds);
+      pickedInclude = chipCheckedIdx(elInclude);
+    });
   });
 
   (function(){
@@ -523,175 +960,207 @@ textarea{resize:vertical;min-height:60px}
     document.getElementById("date").value = d.toISOString().slice(0,10);
   })();
 
+  document.getElementById("foodHints").addEventListener("click", function(e){
+    if (e.target.dataset.f) document.getElementById("food").value = e.target.dataset.f;
+  });
+
   document.getElementById("days").addEventListener("change", function(){
-    var multi = Number(this.value) > 1;
-    var boxes = document.querySelectorAll("#include input");
-    for (var i = 0; i < boxes.length; i++){
-      if (boxes[i].value === "住宿" && multi && !boxes[i].checked){
-        boxes[i].checked = true;
-        boxes[i].parentNode.classList.add("on");
-      }
+    if (Number(this.value) <= 1) return;
+    var boxes = elInclude.querySelectorAll("input");
+    if (boxes[1] && !boxes[1].checked){   // index 1 = 住宿 / Accommodation
+      boxes[1].checked = true;
+      boxes[1].parentNode.classList.add("on");
+      pickedInclude = chipCheckedIdx(elInclude);
     }
   });
 
   document.getElementById("dice").addEventListener("click", function(){
-    document.getElementById("from").value = pick(ORIGINS);
-    document.getElementById("to").value = pick(CITIES);
-    document.getElementById("food").value = pick(FOODS);
+    var l = L();
+    document.getElementById("from").value = pick(l.origins);
+    document.getElementById("to").value = pick(l.cities);
+    document.getElementById("food").value = pick(l.foodOpts);
     document.getElementById("people").value = 1 + Math.floor(Math.random()*4);
     document.getElementById("budget").value = pick([1500,2500,3000,4500,6000]);
-    var boxes = document.querySelectorAll("#transport input");
-    for (var i=0;i<boxes.length;i++){
+    var boxes = elTransport.querySelectorAll("input");
+    for (var i = 0; i < boxes.length; i++){
       boxes[i].checked = Math.random() < 0.35;
       boxes[i].parentNode.classList.toggle("on", boxes[i].checked);
     }
-    if (!chipValues(document.getElementById("transport")).length){
+    if (!chipValues(elTransport).length && boxes[2]){
       boxes[2].checked = true; boxes[2].parentNode.classList.add("on");
     }
+    pickedTransport = chipCheckedIdx(elTransport);
   });
 
-  /* ---------- 地點自動完成 ---------- */
-
-  var acAvailable = true; // 後端說沒設定 Google 金鑰就關掉，退回純文字輸入
-
-  function newSession(){
-    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  function readForm(){
+    return {
+      from: document.getElementById("from").value.trim() || L().defFrom,
+      to: document.getElementById("to").value.trim() || L().defTo,
+      food: document.getElementById("food").value.trim() || L().defFood,
+      date: document.getElementById("date").value,
+      start: document.getElementById("start").value || "09:00",
+      days: parseInt(document.getElementById("days").value, 10) || 1,
+      people: Math.max(1, parseInt(document.getElementById("people").value, 10) || 1),
+      budget: Math.max(0, parseInt(document.getElementById("budget").value, 10) || 0),
+      transport: chipValues(elTransport),
+      needs: chipValues(elNeeds),
+      include: chipValues(elInclude),
+      notes: document.getElementById("notes").value.trim(),
+      lang: LANG
+    };
   }
+
+  /* ==================== 套用語言 ==================== */
+
+  function applyLang(){
+    var l = L();
+    document.documentElement.lang = l.htmlLang;
+    document.title = l.brand;
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"), function(el){
+      var v = l[el.dataset.i18n];
+      if (typeof v === "string") el.textContent = v;
+    });
+    document.getElementById("notes").placeholder = l.notesPh;
+
+    // 預設值只在使用者還沒動過時才跟著換語言
+    ["from","to","food"].forEach(function(id){
+      var el = document.getElementById(id);
+      var key = id === "from" ? "defFrom" : id === "to" ? "defTo" : "defFood";
+      if (!el.value || el.dataset.pristine !== "0") el.value = l[key];
+    });
+
+    buildChips(elTransport, l.transportOpts, pickedTransport);
+    buildChips(elNeeds, l.needsOpts, pickedNeeds);
+    buildChips(elInclude, l.includeOpts, pickedInclude);
+
+    document.getElementById("foodHints").innerHTML = l.foodOpts.slice(0,6).map(function(f){
+      return '<button type="button" data-f="' + esc(f) + '">' + esc(f) + '</button>';
+    }).join("");
+
+    document.getElementById("langs").innerHTML = LANGS.map(function(code){
+      return '<button type="button" data-lang="' + code + '"' +
+             (code === LANG ? ' class="on"' : '') + '>' + esc(I18N[code].label) + '</button>';
+    }).join("");
+
+    renderSaved();
+    if (state) render(); else showEmpty();
+  }
+
+  ["from","to","food"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", function(){ this.dataset.pristine = "0"; });
+  });
+
+  document.getElementById("langs").addEventListener("click", function(e){
+    var code = e.target.dataset && e.target.dataset.lang;
+    if (!code || code === LANG) return;
+    LANG = code;
+    try { localStorage.setItem("shunlu.lang", code); } catch (err) { /* 忽略 */ }
+    applyLang();
+  renderSaved();
+  });
+
+  /* ==================== 地點自動完成 ==================== */
+
+  var acAvailable = true;
+  function newSession(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
   function attachAutocomplete(input){
     var box = document.createElement("div");
-    box.className = "ac-list";
-    box.hidden = true;
+    box.className = "ac-list"; box.hidden = true;
     input.parentNode.appendChild(box);
-
     var items = [], sel = -1, session = newSession(), timer = null, ctl = null;
 
     function close(){ box.hidden = true; items = []; sel = -1; }
-
     function paint(){
       if (!items.length) return close();
       box.innerHTML = items.map(function(it, i){
         return '<button type="button" class="ac-item' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">' +
                '<span class="m">' + esc(it.main) + '</span>' +
-               (it.secondary ? '<span class="s">' + esc(it.secondary) + '</span>' : '') +
-               '</button>';
+               (it.secondary ? '<span class="s">' + esc(it.secondary) + '</span>' : '') + '</button>';
       }).join("");
       box.hidden = false;
     }
-
     function choose(i){
       var it = items[i];
       if (!it) return;
-      // 填 main 就好 —— 「台中高鐵站」比「台灣台中市烏日區高鐵東一路8號」好讀，
-      // 而且模型本來就認得站名
       input.value = it.main;
-      session = newSession(); // 選定即結束一個計價 session
+      input.dataset.pristine = "0";
+      session = newSession();
       close();
     }
-
     function fetchNow(){
       var q = input.value.trim();
       if (!acAvailable || q.length < 2) return close();
       if (ctl) ctl.abort();
       ctl = new AbortController();
-      fetch("/api/places?q=" + encodeURIComponent(q) + "&session=" + encodeURIComponent(session),
-            {signal: ctl.signal})
+      fetch("/api/places?q=" + encodeURIComponent(q) +
+            "&session=" + encodeURIComponent(session) +
+            "&lang=" + encodeURIComponent(LANG), {signal: ctl.signal})
         .then(function(r){ return r.json(); })
         .then(function(j){
           if (j.code === "no_google"){ acAvailable = false; return close(); }
-          items = j.suggestions || [];
-          sel = -1;
-          paint();
+          items = j.suggestions || []; sel = -1; paint();
         })
-        .catch(function(){ /* 中止或連線問題：安靜關掉，別擋住打字 */ });
+        .catch(function(){ /* 中止或連線問題，安靜關掉 */ });
     }
 
     input.addEventListener("input", function(){
       clearTimeout(timer);
-      // 每個字都打一次 Google 太浪費，等使用者停一下再問
-      timer = setTimeout(fetchNow, 260);
+      timer = setTimeout(fetchNow, 260);   // 每個字都問 Google 太浪費
     });
-
     input.addEventListener("keydown", function(e){
       if (box.hidden || !items.length) return;
-      if (e.key === "ArrowDown"){ e.preventDefault(); sel = (sel + 1) % items.length; paint(); }
-      else if (e.key === "ArrowUp"){ e.preventDefault(); sel = (sel - 1 + items.length) % items.length; paint(); }
+      if (e.key === "ArrowDown"){ e.preventDefault(); sel = (sel+1)%items.length; paint(); }
+      else if (e.key === "ArrowUp"){ e.preventDefault(); sel = (sel-1+items.length)%items.length; paint(); }
       else if (e.key === "Enter" && sel >= 0){ e.preventDefault(); choose(sel); }
       else if (e.key === "Escape"){ close(); }
     });
-
     box.addEventListener("mousedown", function(e){
-      // mousedown 而非 click：blur 會先把選單關掉
       var btn = e.target.closest("[data-i]");
       if (btn){ e.preventDefault(); choose(Number(btn.dataset.i)); }
     });
-
     input.addEventListener("blur", function(){ setTimeout(close, 120); });
   }
-
   attachAutocomplete(document.getElementById("from"));
   attachAutocomplete(document.getElementById("to"));
 
-  /* ---------- 用我現在的位置 ---------- */
-
   document.getElementById("locBtn").addEventListener("click", function(){
-    var btn = this;
-    var fromInput = document.getElementById("from");
-
-    if (!navigator.geolocation){
-      btn.textContent = "這個瀏覽器不支援定位";
-      btn.disabled = true;
-      return;
+    var btn = this, fromInput = document.getElementById("from"), l = L();
+    function reset(msg){
+      btn.textContent = msg;
+      setTimeout(function(){ btn.disabled = false; btn.textContent = L().useMyLocation; }, 2600);
     }
-
-    btn.disabled = true;
-    btn.textContent = "定位中…";
+    if (!navigator.geolocation){ btn.disabled = true; btn.textContent = l.locNoSupport; return; }
+    btn.disabled = true; btn.textContent = l.locating;
 
     navigator.geolocation.getCurrentPosition(function(pos){
-      fetch("/api/whereami?lat=" + pos.coords.latitude + "&lng=" + pos.coords.longitude)
+      fetch("/api/whereami?lat=" + pos.coords.latitude + "&lng=" + pos.coords.longitude +
+            "&lang=" + encodeURIComponent(LANG))
         .then(function(r){ return r.json(); })
         .then(function(j){
           if (j.ok && j.name){
             fromInput.value = j.name;
-            btn.textContent = "已填入目前位置";
+            fromInput.dataset.pristine = "0";
+            reset(L().locDone);
           } else {
-            btn.textContent = j.code === "no_google" ? "伺服器未設定地圖金鑰" : "查不到你在哪，手動填吧";
+            reset(j.code === "no_google" ? L().locNoKey : L().locFail);
           }
         })
-        .catch(function(){ btn.textContent = "查詢失敗，手動填吧"; })
-        .then(function(){
-          setTimeout(function(){ btn.disabled = false; btn.textContent = "用我現在的位置"; }, 2600);
-        });
+        .catch(function(){ reset(L().locFail); });
     }, function(err){
-      btn.textContent = err.code === 1 ? "你拒絕了定位權限" : "拿不到位置，手動填吧";
-      setTimeout(function(){ btn.disabled = false; btn.textContent = "用我現在的位置"; }, 2600);
+      reset(err.code === 1 ? L().locDenied : L().locFail);
     }, {timeout: 9000, maximumAge: 60000});
   });
 
-  function readForm(){
-    return {
-      from: document.getElementById("from").value.trim() || "台中高鐵站",
-      to: document.getElementById("to").value.trim() || "台北",
-      food: document.getElementById("food").value.trim() || "在地美食",
-      date: document.getElementById("date").value,
-      days: parseInt(document.getElementById("days").value, 10) || 1,
-      start: document.getElementById("start").value || "09:00",
-      people: Math.max(1, parseInt(document.getElementById("people").value, 10) || 1),
-      budget: Math.max(0, parseInt(document.getElementById("budget").value, 10) || 0),
-      transport: chipValues(document.getElementById("transport")),
-      needs: chipValues(document.getElementById("needs")),
-      include: chipValues(document.getElementById("include")),
-      notes: document.getElementById("notes").value.trim()
-    };
-  }
+  /* ==================== 行程資料 ==================== */
 
-  /* ---------- state ---------- */
   function normStop(s, i){
     return {
-      id: "s" + i + "_" + Math.random().toString(36).slice(2, 6),
-      kind: (s && KIND_LABEL[s.kind]) ? s.kind : "other",
+      id: "s" + i + "_" + Math.random().toString(36).slice(2,6),
+      kind: (s && L().kinds[s.kind]) ? s.kind : "other",
       day: Number(s && s.day) || 1,
-      name: (s && s.name) || "未命名",
+      name: (s && s.name) || "—",
       time: (s && s.time) || "",
       duration: (s && s.duration) || "",
       howTo: (s && s.howTo) || "",
@@ -709,12 +1178,11 @@ textarea{resize:vertical;min-height:60px}
       off: false
     };
   }
-
   function normExtra(x, i){
     return {
-      id: "x" + i + "_" + Math.random().toString(36).slice(2, 6),
-      kind: (x && KIND_LABEL[x.kind]) ? x.kind : "sight",
-      name: (x && x.name) || "備選",
+      id: "x" + i + "_" + Math.random().toString(36).slice(2,6),
+      kind: (x && L().kinds[x.kind]) ? x.kind : "sight",
+      name: (x && x.name) || "—",
       why: (x && x.why) || "",
       area: (x && x.area) || "",
       cost: Number(x && x.cost) || 0,
@@ -722,94 +1190,143 @@ textarea{resize:vertical;min-height:60px}
       added: false
     };
   }
-
   function emptyTrip(f, isDemo){
-    return {demo: !!isDemo, mock: false, streaming: false, form: f, title: "", summary: "", tips: [], stops: [], extras: []};
+    return {demo: !!isDemo, mock:false, streaming:false, edited:false, replanning:false, replanNote:"",
+            insertAt:-1, insertKind:"sight", insertName:"", justSaved:false, form:f, title:"", summary:"", tips:[], stops:[], extras:[]};
   }
-
   function normalize(raw, f, isDemo){
-    var t = emptyTrip(f, isDemo);
-    t.title = (raw && raw.title) || (f.to + " " + f.food + "一日路線");
-    t.summary = (raw && raw.summary) || "";
-    t.tips = Array.isArray(raw && raw.tips) ? raw.tips : [];
-    t.stops = (Array.isArray(raw && raw.stops) ? raw.stops : []).map(normStop);
-    t.extras = (Array.isArray(raw && raw.extras) ? raw.extras : []).map(normExtra);
-    return t;
+    var tr = emptyTrip(f, isDemo);
+    tr.title = (raw && raw.title) || (f.to + " · " + f.food);
+    tr.summary = (raw && raw.summary) || "";
+    tr.tips = Array.isArray(raw && raw.tips) ? raw.tips : [];
+    tr.stops = (Array.isArray(raw && raw.stops) ? raw.stops : []).map(normStop);
+    tr.extras = (Array.isArray(raw && raw.extras) ? raw.extras : []).map(normExtra);
+    return tr;
   }
 
   function stopCostPerHead(s, people){
-    if (s.costUnit === "每組") return s.cost / people;
-    return s.cost;
+    return s.costUnit === "每組" ? s.cost / people : s.cost;
   }
-
   function totals(){
     var people = state.form.people, groups = {}, perHead = 0;
     state.stops.forEach(function(s){
       if (s.off) return;
       var c = stopCostPerHead(s, people);
       if (!c) return;
-      var g = COST_GROUP[s.kind] || "其他";
-      groups[g] = (groups[g] || 0) + c;
+      groups[s.kind] = (groups[s.kind] || 0) + c;
       perHead += c;
     });
     return {groups: groups, perHead: perHead, grand: perHead * people};
   }
+  function dayCost(day){
+    var people = state.form.people, sum = 0;
+    state.stops.forEach(function(s){ if (!s.off && s.day === day) sum += stopCostPerHead(s, people); });
+    return sum;
+  }
 
-  /* ---------- render ---------- */
-  function renderStop(s){
-    var rows = "";
-    if (s.howTo)   rows += '<div class="crow"><span class="k">怎麼去</span><span class="v">' + esc(s.howTo) + '</span></div>';
-    if (s.detail)  rows += '<div class="crow"><span class="k">內容</span><span class="v">' + esc(s.detail) + '</span></div>';
-    if (s.hours)   rows += '<div class="crow"><span class="k">營業</span><span class="v">' + esc(s.hours) + '</span></div>';
-    if (s.rainPlan)rows += '<div class="crow rain"><span class="k">雨天</span><span class="v">' + esc(s.rainPlan) + '</span></div>';
+  /* ==================== 渲染 ==================== */
+
+  function bookingBlock(f, s){
+    if (s.kind !== "stay") return "";
+    var l = L();
+    var where = [f.to, s.area].filter(Boolean).join(" ");
+    var checkin = addDays(f.date, s.day - 1);
+    var checkout = addDays(f.date, s.day);
+    var booking = "https://www.booking.com/searchresults.html?ss=" + encodeURIComponent(where) +
+      (checkin ? "&checkin=" + checkin + "&checkout=" + checkout : "") +
+      "&group_adults=" + f.people + "&no_rooms=1&group_children=0";
+    var google = "https://www.google.com/travel/search?q=" + encodeURIComponent(where + " hotel");
+    return '<div class="book"><div class="h">' + esc(l.bookTitle) + '</div>' +
+      '<div class="row">' +
+        '<a href="' + esc(booking) + '" target="_blank" rel="noopener">Booking.com</a>' +
+        '<a href="' + esc(google) + '" target="_blank" rel="noopener">Google</a>' +
+      '</div>' +
+      '<div class="why">' + esc(l.bookWhen(checkin, checkout, f.people)) + '　' + esc(l.bookWhy) + '</div></div>';
+  }
+
+  /**
+   * 地圖連結。搜尋用「站名 + 行政區 + 城市」，導航則從上一站出發 ——
+   * 使用者要的通常不是「這在哪」，而是「我現在在上一站，怎麼過去」。
+   */
+  function isDriving(){
+    return (state.form.transport || []).some(function(x){
+      return /自行開車|Rental car|Voiture de location|レンタカー/.test(x);
+    });
+  }
+
+  function mapLinks(s, prev){
+    var l = L(), f = state.form;
+    var here = [s.name, s.area, f.to].filter(Boolean).join(" ");
+    var search = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(here);
+    var html = '<a href="' + esc(search) + '" target="_blank" rel="noopener">' + esc(l.mapOpen) + '</a>';
+
+    var drive = isDriving();
+    if (prev){
+      var dir = "https://www.google.com/maps/dir/?api=1" +
+        "&origin=" + encodeURIComponent([prev.name, prev.area, f.to].filter(Boolean).join(" ")) +
+        "&destination=" + encodeURIComponent(here) +
+        "&travelmode=" + (drive ? "driving" : "transit");
+      html += '<a href="' + esc(dir) + '" target="_blank" rel="noopener">' + esc(l.mapNav) + '</a>';
+    }
+
+    if (drive){
+      // 不自己抓停車場資料：Google 地圖的停車場圖層有位置、營業時間，
+      // 部分還有費率 —— 我們用 Places API 抓回來的會更少而且要付錢。
+      // 關鍵字固定用中文「停車場」，因為這些點都在台灣，中文命中率最高。
+      var park = "https://www.google.com/maps/search/?api=1&query=" +
+                 encodeURIComponent("停車場 " + here);
+      html += '<a href="' + esc(park) + '" target="_blank" rel="noopener">' + esc(l.parking) + '</a>';
+    }
+    return '<div class="maps">' + html + '</div>';
+  }
+
+  function renderStop(s, prev){
+    var l = L(), rows = "";
+    if (s.howTo)    rows += '<div class="crow"><span class="k">' + esc(l.rowHowTo) + '</span><span class="v">' + esc(s.howTo) + '</span></div>';
+    if (s.detail)   rows += '<div class="crow"><span class="k">' + esc(l.rowDetail) + '</span><span class="v">' + esc(s.detail) + '</span></div>';
+    if (s.hours)    rows += '<div class="crow"><span class="k">' + esc(l.rowHours) + '</span><span class="v">' + esc(s.hours) + '</span></div>';
+    if (s.rainPlan) rows += '<div class="crow rain"><span class="k">' + esc(l.rowRain) + '</span><span class="v">' + esc(s.rainPlan) + '</span></div>';
 
     var notes = "";
     if (s.notes.length || s.booking){
       notes = '<div class="notes">' +
         s.notes.map(function(n){ return '<span class="note">' + esc(n) + '</span>'; }).join("") +
-        (s.booking ? '<span class="note book">' + esc(s.booking) + '</span>' : '') +
-        '</div>';
+        (s.booking ? '<span class="note book">' + esc(s.booking) + '</span>' : '') + '</div>';
     }
 
     var cands = "";
     if (s.kind === "stay"){
-      // 旅館的搜尋結果幾乎都是動態產生的訂房網，抓回來是空殼，抽不出可用店名。
-      // 與其顯示「沒查到」，不如直接給帶好條件的搜尋連結。
       cands = bookingBlock(state.form, s);
     } else if (s.checking){
-      cands = '<div class="checking"><span class="pulse"></span>正在搜尋實際存在的店家…</div>';
+      cands = '<div class="checking"><span class="pulse"></span>' + esc(l.checking) + '</div>';
     } else if (s.candidates && s.candidates.length){
-      cands = '<div class="cands"><div class="h">查到這幾家，資料來自下列來源</div>' +
+      cands = '<div class="cands"><div class="h">' + esc(l.candsFound) + '</div>' +
         s.candidates.map(function(c){
           return '<div class="cand"><span class="b">·</span><span><span class="n">' + esc(c.name) + '</span>' +
                  (c.note ? ' — ' + esc(c.note) : '') +
-                 (c.url ? ' <a class="s" href="' + esc(c.url) + '" target="_blank" rel="noopener">來源</a>' : '') +
+                 (c.url ? ' <a class="s" href="' + esc(c.url) + '" target="_blank" rel="noopener">' + esc(l.source) + '</a>' : '') +
                  '</span></div>';
         }).join("") + '</div>';
     } else if (s.candidates && s.candidates.length === 0){
-      cands = '<div class="cands none"><div class="h">' +
-        (s.area ? esc(s.area) + '沒查到可靠的店家資料，到現場再挑' : '搜尋沒有找到可靠的店家資料，到現場再挑') +
-        '</div></div>';
+      cands = '<div class="cands none"><div class="h">' + esc(l.candsNone(s.area)) + '</div></div>';
     }
 
     var cost = s.cost > 0
-      ? '<span class="cost mono">' + money(s.cost) + '<small>' + esc(s.costUnit) + '</small></span>'
-      : '<span class="cost mono free">免費</span>';
+      ? '<span class="cost mono">' + money(s.cost) + '<small>' + esc(unit(s.costUnit)) + '</small></span>'
+      : '<span class="cost mono free">' + esc(l.free) + '</span>';
 
     var meta = [];
     if (s.duration) meta.push(s.duration);
     if (s.area) meta.push(s.area);
-    meta.push(KIND_LABEL[s.kind]);
+    meta.push(l.kinds[s.kind]);
 
-    // 交通段不需要標；其餘照模型自評的可信度提醒
     var flag = "";
-    if (s.kind !== "transit"){
-      if (s.verified === "generic") flag = '<span class="flag">未指名 · 到場再挑</span>';
-      else if (s.verified === "unverified") flag = '<span class="flag warn">店名未查證</span>';
+    if (s.kind !== "transit" && s.kind !== "stay"){
+      if (s.verified === "generic") flag = '<span class="flag">' + esc(l.flagGeneric) + '</span>';
+      else if (s.verified === "unverified") flag = '<span class="flag warn">' + esc(l.flagUnverified) + '</span>';
     }
 
-    return '' +
-      '<div class="stop' + (s.off ? ' off' : '') + '" data-kind="' + s.kind + '">' +
+    return '<div class="stop' + (s.off ? ' off' : '') + '" data-kind="' + s.kind + '">' +
         '<div class="rail"><span class="dot"></span></div>' +
         '<div class="card">' +
           '<div class="chead">' +
@@ -819,203 +1336,501 @@ textarea{resize:vertical;min-height:60px}
           '<div class="tags" style="margin-top:6px">' +
             meta.map(function(m){ return '<span class="tag">' + esc(m) + '</span>'; }).join("") + flag +
           '</div>' +
-          rows + notes + cands +
+          rows + notes +
+          (s.kind === "transit" ? "" : mapLinks(s, prev)) + cands +
           '<div class="cfoot"><button type="button" class="mini" data-toggle="' + s.id + '">' +
-            (s.off ? "放回行程" : "從行程移除") + '</button></div>' +
-        '</div>' +
-      '</div>';
+            esc(s.off ? l.restoreStop : l.removeStop) + '</button></div>' +
+        '</div></div>';
   }
 
   function renderExtra(x){
-    return '' +
-      '<div class="xcard">' +
+    var l = L();
+    return '<div class="xcard">' +
         '<h3>' + esc(x.name) + '</h3>' +
         (x.area ? '<span class="tag" style="align-self:flex-start">' + esc(x.area) + '</span>' : '') +
         '<p>' + esc(x.why) + '</p>' +
         '<div class="xf">' +
           (x.cost > 0
-            ? '<span class="cost mono">' + money(x.cost) + '<small>' + esc(x.costUnit) + '</small></span>'
-            : '<span class="cost mono free">免費</span>') +
-          '<button type="button" class="mini" data-add="' + x.id + '">' + (x.added ? "已加入行程" : "加進行程") + '</button>' +
-        '</div>' +
-      '</div>';
+            ? '<span class="cost mono">' + money(x.cost) + '<small>' + esc(unit(x.costUnit)) + '</small></span>'
+            : '<span class="cost mono free">' + esc(l.free) + '</span>') +
+          '<button type="button" class="mini" data-add="' + x.id + '">' +
+            esc(x.added ? l.addedExtra : l.addExtra) + '</button>' +
+        '</div></div>';
+  }
+
+  function pendingRow(){
+    return '<div class="stop pending"><div class="rail"><span class="dot"></span></div>' +
+           '<div class="card"><span class="pulse"></span>' + esc(t("pending")) + '</div></div>';
+  }
+
+  function insertSlot(i){
+    var l = L();
+    if (state.insertAt === i){
+      var kinds = [["food",l.insertKindFood],["sight",l.insertKindSight],["other",l.insertKindOther]];
+      return '<div class="ins"><div class="rail"></div><div class="insform">' +
+        '<input type="text" id="insName" value="' + esc(state.insertName || "") + '" placeholder="' + esc(l.insertName) + '">' +
+        '<div class="kinds">' + kinds.map(function(k){
+          return '<button type="button" data-ik="' + k[0] + '"' +
+                 (state.insertKind === k[0] ? ' class="on"' : '') + '>' + esc(k[1]) + '</button>';
+        }).join("") + '</div>' +
+        '<div class="go">' +
+          '<button type="button" class="mini" data-inscancel="1">' + esc(l.insertCancel) + '</button>' +
+          '<button type="button" class="mini act" data-insadd="' + i + '">' + esc(l.insertAdd) + '</button>' +
+        '</div></div></div>';
+    }
+    return '<div class="ins"><div class="rail"></div>' +
+           '<button type="button" class="insbtn" data-insat="' + i + '">＋ ' + esc(l.insertHere) + '</button></div>';
+  }
+
+  function renderTimeline(){
+    var maxDay = 1;
+    state.stops.forEach(function(s){ if (s.day > maxDay) maxDay = s.day; });
+    var html = "", lastDay = 0;
+    state.stops.forEach(function(s, i){
+      if (maxDay > 1 && s.day !== lastDay){
+        lastDay = s.day;
+        var spend = dayCost(s.day);
+        html += '<div class="dayline"><span class="daytag">' + esc(L().dayN(s.day)) + '</span>' +
+                '<span class="rule"></span>' +
+                (spend > 0 ? '<span class="sub">' + money(spend) + '</span>' : '') + '</div>';
+      }
+      html += renderStop(s, i > 0 ? state.stops[i-1] : null);
+      if (!state.streaming) html += insertSlot(i + 1);
+    });
+    return html;
+  }
+
+  function toolbar(){
+    var l = L();
+    if (state.streaming) return "";
+    return '<div class="toolbar">' +
+      '<button type="button" class="mini' + (state.edited ? ' act' : '') + '" id="replanBtn"' +
+        (state.replanning ? ' disabled' : '') + '>' +
+        esc(state.replanning ? l.replanning : l.replanBtn) + '</button>' +
+      '<button type="button" class="mini" id="saveBtn">' + esc(state.justSaved ? l.tripSaved : l.saveTrip) + '</button>' +
+      '<button type="button" class="mini" id="printBtn">' + esc(l.downloadPdf) + '</button>' +
+      '<button type="button" class="mini" id="exportBtn">' + esc(l.exportJson) + '</button>' +
+      (state.form.date ? '<button type="button" class="mini" id="icsBtn">' + esc(l.downloadIcs) + '</button>' : '') +
+      '</div>' +
+      (state.edited ? '<p class="hint warn">' + esc(l.replanHint) + '</p>' : '') +
+      (state.replanNote ? '<p class="hint">' + esc(state.replanNote) + '</p>' : '');
   }
 
   function render(){
-    var f = state.form;
+    var l = L(), f = state.form;
     var tags = [
       f.from + " → " + f.to,
-      f.date || "日期未定",
-      f.days > 1 ? (f.days + " 天 " + (f.days - 1) + " 夜") : "當日來回",
-      f.people + " 人"
+      f.date || l.tagNoDate,
+      f.days > 1 ? l.tagDays(f.days) : l.tagRoundTrip,
+      l.tagPeople(f.people)
     ].concat(f.transport, f.needs);
 
     var banner;
     if (state.mock){
-      banner = '<div class="notice demo"><b>模擬模式</b>　MOCK_PLAN=1 開著，' +
-        '所以<b>不論條件填什麼，回來的都是同一份固定的假行程</b>。' +
-        '這個模式驗證的是版面、串流與費用重算，不是內容。' +
-        '要依你填的條件生成，關掉 MOCK_PLAN 並確認 .env 的 ANTHROPIC_WORKSPACE_ID 已填。</div>';
+      banner = '<div class="notice demo"><b>' + esc(l.noticeMockB) + '</b>　' + esc(l.noticeMock) + '</div>';
     } else if (state.demo){
-      banner = '<div class="notice demo"><b>示範資料</b>　內建的固定假資料，用來看版面與互動。' +
-        '按「排一條路線」才會依你填的條件生成。</div>';
+      banner = '<div class="notice demo"><b>' + esc(l.noticeDemoB) + '</b>　' + esc(l.noticeDemo) + '</div>';
     } else {
-      banner = '<div class="notice"><b>AI 生成</b>　標著「店名未查證」的，出發前務必自己確認一次 —— ' +
-        '店可能已經收了，或根本不是那個類型。營業時間、票價與出口編號同理。</div>';
+      banner = '<div class="notice"><b>' + esc(l.noticeAIB) + '</b>　' + esc(l.noticeAI) + '</div>';
     }
 
     out.innerHTML = banner +
       '<div class="trip-head">' +
         '<h2>' + esc(state.title) + '</h2>' +
         (state.summary ? '<p>' + esc(state.summary) + '</p>' : '') +
-        '<div class="tags">' + tags.map(function(t){ return '<span class="tag">' + esc(t) + '</span>'; }).join("") + '</div>' +
+        '<div class="tags">' + tags.map(function(x){ return '<span class="tag">' + esc(x) + '</span>'; }).join("") + '</div>' +
       '</div>' +
-      '<div class="secttl">路線</div>' +
-      '<div class="timeline">' + renderTimeline() +
-        (state.streaming ? pendingRow() : "") + '</div>' +
+      '<div class="secttl">' + esc(l.secRoute) + '</div>' + toolbar() +
+      '<div class="timeline">' + renderTimeline() + (state.streaming ? pendingRow() : "") + '</div>' +
       (state.extras.length
-        ? '<div class="secttl">私房 / 備選　可加可不加</div><div class="extras">' + state.extras.map(renderExtra).join("") + '</div>'
+        ? '<div class="secttl">' + esc(l.secExtras) + '</div><div class="extras">' + state.extras.map(renderExtra).join("") + '</div>'
         : '') +
       (state.tips.length
-        ? '<div class="secttl">出門前</div><ul class="tips">' + state.tips.map(function(t){ return '<li>' + esc(t) + '</li>'; }).join("") + '</ul>'
+        ? '<div class="secttl">' + esc(l.secTips) + '</div><ul class="tips">' +
+          state.tips.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>'
         : '');
-
     renderTotals();
   }
 
-  /** 多天行程在每一天開頭插一條分隔；當日來回就不插，免得多一條沒用的線 */
-  function renderTimeline(){
-    var maxDay = 1;
-    state.stops.forEach(function(s){ if (s.day > maxDay) maxDay = s.day; });
-
-    var html = "", lastDay = 0;
-    state.stops.forEach(function(s){
-      if (maxDay > 1 && s.day !== lastDay){
-        lastDay = s.day;
-        var spend = dayCost(s.day);
-        html += '<div class="dayline"><span class="daytag">第 ' + s.day + ' 天</span>' +
-                '<span class="rule"></span>' +
-                (spend > 0 ? '<span class="sub">' + money(spend) + '</span>' : '') +
-                '</div>';
-      }
-      html += renderStop(s);
-    });
-    return html;
-  }
-
-  function dayCost(day){
-    var people = state.form.people, sum = 0;
-    state.stops.forEach(function(s){
-      if (s.off || s.day !== day) return;
-      sum += stopCostPerHead(s, people);
-    });
-    return sum;
-  }
-
-  function pendingRow(){
-    return '<div class="stop pending"><div class="rail"><span class="dot"></span></div>' +
-           '<div class="card"><span class="pulse"></span>正在排下一站…</div></div>';
-  }
-
   function renderTotals(){
-    var t = totals(), f = state.form;
-    var order = ["交通","餐飲","門票","住宿","其他"];
-    document.getElementById("tbreak").innerHTML = order.filter(function(g){ return t.groups[g]; }).map(function(g){
-      return '<div class="tb"><span class="lab">' + g + '</span><span class="val mono">' + money(t.groups[g]) + '</span></div>';
-    }).join("") || '<div class="tb"><span class="lab">目前</span><span class="val mono">沒有花費</span></div>';
+    var l = L(), tt = totals(), f = state.form;
+    var order = ["transit","food","sight","stay","other"];
+    document.getElementById("tbreak").innerHTML =
+      order.filter(function(g){ return tt.groups[g]; }).map(function(g){
+        return '<div class="tb"><span class="lab">' + esc(l.groups[g]) + '</span>' +
+               '<span class="val mono">' + money(tt.groups[g]) + '</span></div>';
+      }).join("") ||
+      '<div class="tb"><span class="lab">' + esc(l.spendNow) + '</span><span class="val mono">' + esc(l.noSpend) + '</span></div>';
 
-    document.getElementById("perHead").textContent = money(t.perHead);
-    document.getElementById("grand").textContent = money(t.grand);
+    document.getElementById("perHead").textContent = money(tt.perHead);
+    document.getElementById("grand").textContent = money(tt.grand);
 
     var chip = document.getElementById("budgetChip");
     if (!f.budget){ chip.hidden = true; }
     else {
       chip.hidden = false;
-      var diff = f.budget - t.perHead;
+      var diff = f.budget - tt.perHead;
       chip.classList.toggle("over", diff < 0);
-      chip.textContent = diff >= 0 ? "距預算還有 " + money(diff) : "超出預算 " + money(-diff);
+      chip.textContent = diff >= 0 ? l.budgetLeft(money(diff)) : l.budgetOver(money(-diff));
     }
     totalsBar.hidden = false;
   }
 
   out.addEventListener("click", function(e){
-    var t = e.target.dataset.toggle, a = e.target.dataset.add;
-    if (t){
-      state.stops.forEach(function(s){ if (s.id === t) s.off = !s.off; });
+    var tg = e.target.dataset.toggle, ad = e.target.dataset.add;
+    if (tg){
+      state.stops.forEach(function(s){ if (s.id === tg) s.off = !s.off; });
+      state.edited = true;
       render();
-    } else if (a){
+    } else if (ad){
       var x = null;
-      state.extras.forEach(function(v){ if (v.id === a) x = v; });
+      state.extras.forEach(function(v){ if (v.id === ad) x = v; });
       if (!x || x.added) return;
       x.added = true;
+      var lastDay = 1;
+      state.stops.forEach(function(s){ if (s.day > lastDay) lastDay = s.day; });
       state.stops.push({
-        id: "s" + Date.now(), kind: x.kind, name: x.name, time: "", duration: "自行安排",
-        howTo: "", detail: x.why, hours: "", cost: x.cost, costUnit: x.costUnit,
-        rainPlan: "", notes: ["後來加入"], booking: "", off: false
+        id: "s" + Date.now(), kind: x.kind, day: lastDay, name: x.name, time: "",
+        duration: "", howTo: "", detail: x.why, hours: "", area: x.area,
+        cost: x.cost, costUnit: x.costUnit, verified: "unverified",
+        candidates: null, checking: false, rainPlan: "",
+        notes: [L().addedNote], booking: "", off: false
       });
+      state.edited = true;
       render();
     }
   });
 
-  /* ---------- states ---------- */
+  out.addEventListener("click", function(e){
+    var d = e.target.dataset || {};
+
+    if (d.insat !== undefined){
+      state.insertAt = Number(d.insat);
+      render();
+      var el = document.getElementById("insName");
+      if (el) el.focus();
+      return;
+    }
+    if (d.inscancel){ state.insertAt = -1; state.insertName = ""; render(); return; }
+    if (d.ik){
+      // 先把已經打的字收起來，重繪後才不會被清掉
+      var typed = document.getElementById("insName");
+      if (typed) state.insertName = typed.value;
+      state.insertKind = d.ik;
+      render();
+      var back = document.getElementById("insName");
+      if (back){ back.focus(); back.setSelectionRange(back.value.length, back.value.length); }
+      return;
+    }
+
+    if (d.insadd !== undefined){
+      var name = ((document.getElementById("insName") || {}).value || state.insertName || "").trim();
+      if (!name) return;
+      var at = Number(d.insadd);
+      var neighbour = state.stops[at - 1] || state.stops[at] || {day:1, area:""};
+      state.stops.splice(at, 0, normStop({
+        kind: state.insertKind,
+        name: name,
+        day: neighbour.day,
+        area: neighbour.area,
+        // 使用者手動加的，我們對它一無所知 —— 標成未查證，別假裝知道
+        verified: "unverified",
+        cost: 0, costUnit: "每人",
+        notes: [L().addedNote]
+      }, Date.now()));
+      state.insertAt = -1;
+      state.insertName = "";
+      state.edited = true;
+      render();
+      return;
+    }
+
+    if (e.target.id === "printBtn"){
+      // 瀏覽器的列印引擎是這裡最好的 PDF 產生器：中日文完美、版面我控制、
+      // 檔案小、不用在 512MB 的免費機器上跑 Chromium
+      state.replanNote = L().pdfHint;
+      render();
+      setTimeout(function(){ window.print(); }, 60);
+      return;
+    }
+    if (e.target.id === "saveBtn"){
+      var list = loadSaved();
+      list.unshift(tripSnapshot());
+      if (writeSaved(list)){
+        state.justSaved = true;
+        renderSaved();
+        render();
+        setTimeout(function(){ if (state) { state.justSaved = false; render(); } }, 2000);
+      }
+      return;
+    }
+    if (e.target.id === "exportBtn"){
+      download(safeName() + ".json", JSON.stringify(tripSnapshot(), null, 2), "application/json");
+      return;
+    }
+    if (e.target.id === "icsBtn"){
+      var ics = buildIcs();
+      if (ics) download(safeName() + ".ics", ics, "text/calendar;charset=utf-8");
+      return;
+    }
+
+    if (e.target.id === "replanBtn"){ replan(); return; }
+  });
+
+  /**
+   * 重排時間。只送站序回去，回來只套用時間類欄位 ——
+   * 名稱、價格、備註都是使用者手上那份，模型不准動。
+   */
+  function replan(){
+    if (!state || state.replanning) return;
+    state.replanning = true;
+    state.replanNote = "";
+    render();
+
+    var live = state.stops.filter(function(s){ return !s.off; });
+    fetch("/api/replan", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        form: state.form,
+        stops: live.map(function(s){
+          return {kind:s.kind, name:s.name, time:s.time, duration:s.duration,
+                  area:s.area, day:s.day, cost:s.cost, costUnit:s.costUnit};
+        })
+      })
+    })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j.ok || !Array.isArray(j.patch) || j.patch.length !== live.length){
+          state.replanNote = L().replanFail;
+          return;
+        }
+        live.forEach(function(s, i){
+          var pch = j.patch[i];
+          s.time = pch.time || s.time;
+          s.duration = pch.duration || s.duration;
+          if (pch.howTo) s.howTo = pch.howTo;
+          s.day = pch.day || s.day;
+        });
+        state.edited = false;
+        state.replanNote = j.note || "";
+      })
+      .catch(function(){ state.replanNote = L().replanFail; })
+      .then(function(){ state.replanning = false; render(); });
+  }
+
+  /* ==================== 存檔、匯出、匯入 ==================== */
+
+  var STORE_KEY = "shunlu.trips";
+
+  /**
+   * 存在瀏覽器裡。不是雲端 —— 換一台裝置就看不到，這點在匯出按鈕旁邊講清楚。
+   * 要跨裝置就用「匯出檔案」，那份 JSON 也是備份。
+   */
+  function loadSaved(){
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e){ return []; }
+  }
+  function writeSaved(list){
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(list.slice(0, 30))); return true; }
+    catch (e){ return false; }   // 無痕模式或空間滿了
+  }
+
+  /** 存下來的是「可以還原的最小集合」，不含 candidates 那些查證結果 */
+  function tripSnapshot(){
+    return {
+      v: 1,
+      savedAt: Date.now(),
+      title: state.title,
+      summary: state.summary,
+      tips: state.tips,
+      form: state.form,
+      stops: state.stops.map(function(s){
+        return {kind:s.kind, day:s.day, name:s.name, time:s.time, duration:s.duration,
+                howTo:s.howTo, detail:s.detail, hours:s.hours, area:s.area,
+                cost:s.cost, costUnit:s.costUnit, verified:s.verified,
+                rainPlan:s.rainPlan, notes:s.notes, booking:s.booking, off:s.off};
+      }),
+      extras: state.extras.map(function(x){
+        return {kind:x.kind, name:x.name, why:x.why, area:x.area, cost:x.cost, costUnit:x.costUnit};
+      })
+    };
+  }
+
+  function restoreTrip(snap){
+    if (!snap || !Array.isArray(snap.stops) || !snap.stops.length) return false;
+    var f = Object.assign({}, readForm(), snap.form || {});
+    var tr = normalize(snap, f, false);
+    // off 狀態要跟著回來，不然使用者刪掉的站會全部復活
+    snap.stops.forEach(function(raw, i){ if (raw && raw.off && tr.stops[i]) tr.stops[i].off = true; });
+    state = tr;
+    render();
+    window.scrollTo({top:0, behavior:"smooth"});
+    return true;
+  }
+
+  function renderSaved(){
+    var l = L(), list = loadSaved(), host = document.getElementById("savedList");
+    if (!list.length){
+      host.innerHTML = '<div class="empty-saved">' + esc(l.noSavedTrips) + '</div>';
+      return;
+    }
+    host.innerHTML = list.map(function(tr, i){
+      var d = new Date(tr.savedAt || Date.now());
+      var stamp = (d.getMonth()+1) + "/" + d.getDate();
+      return '<div class="srow">' +
+        '<span class="n" title="' + esc(tr.title) + '">' + esc(tr.title || "—") + '</span>' +
+        '<span class="d">' + stamp + '</span>' +
+        '<button type="button" data-open="' + i + '">' + esc(l.openTrip) + '</button>' +
+        '<button type="button" class="del" data-del="' + i + '">' + esc(l.deleteTrip) + '</button>' +
+        '</div>';
+    }).join("");
+  }
+
+  function download(filename, text, mime){
+    var blob = new Blob([text], {type: mime});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function safeName(){
+    return (state.title || "trip").replace(/[\\/:*?"<>|]/g, "").slice(0, 60).trim() || "trip";
+  }
+
+  /**
+   * .ics 行事曆。每一站一個事件，時間用行程裡的 time 加上出發日推算。
+   * 沒有時間的站跳過 —— 硬塞一個假時間到行事曆裡比不加更糟。
+   */
+  function buildIcs(){
+    var f = state.form;
+    if (!f.date) return null;
+    function stamp(dayOffset, hhmm){
+      var d = new Date(f.date + "T00:00:00");
+      if (isNaN(d.getTime())) return null;
+      d.setDate(d.getDate() + dayOffset);
+      var m = /^(\d{1,2}):(\d{2})/.exec(hhmm || "");
+      if (!m) return null;
+      d.setHours(Number(m[1]), Number(m[2]), 0, 0);
+      return d.getFullYear() + pad2(d.getMonth()+1) + pad2(d.getDate()) +
+             "T" + pad2(d.getHours()) + pad2(d.getMinutes()) + "00";
+    }
+    function fold(line){
+      // RFC 5545 規定一行最多 75 個八位元組，超過要折行
+      var outLines = [], buf = line;
+      while (buf.length > 72){ outLines.push(buf.slice(0,72)); buf = " " + buf.slice(72); }
+      outLines.push(buf);
+      return outLines.join("\r\n");
+    }
+    function escIcs(x){
+      return String(x||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n");
+    }
+    var rows = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//shunlu//trip//TW","CALSCALE:GREGORIAN"];
+    var n = 0;
+    state.stops.forEach(function(s, i){
+      if (s.off) return;
+      var start = stamp(s.day - 1, s.time);
+      if (!start) return;
+      n++;
+      var desc = [s.howTo, s.detail, s.hours, s.rainPlan].filter(Boolean).join("\n");
+      rows.push("BEGIN:VEVENT");
+      rows.push("UID:shunlu-" + i + "-" + Date.now() + "@shunlu");
+      rows.push("DTSTART:" + start);
+      rows.push(fold("SUMMARY:" + escIcs(s.name)));
+      if (s.area) rows.push(fold("LOCATION:" + escIcs([s.name, s.area, f.to].filter(Boolean).join(" "))));
+      if (desc) rows.push(fold("DESCRIPTION:" + escIcs(desc)));
+      rows.push("END:VEVENT");
+    });
+    rows.push("END:VCALENDAR");
+    return n ? rows.join("\r\n") : null;
+  }
+
+  document.getElementById("savedList").addEventListener("click", function(e){
+    var d = e.target.dataset || {};
+    if (d.open !== undefined){ restoreTrip(loadSaved()[Number(d.open)]); return; }
+    if (d.del !== undefined){
+      var list = loadSaved(); list.splice(Number(d.del), 1);
+      writeSaved(list); renderSaved();
+    }
+  });
+
+  document.getElementById("importBtn").addEventListener("click", function(){
+    document.getElementById("importFile").click();
+  });
+  document.getElementById("importFile").addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var snap = null;
+      try { snap = JSON.parse(String(reader.result)); } catch (err) { snap = null; }
+      if (!restoreTrip(snap)) alert(L().importFail);
+      else {
+        var list = loadSaved(); list.unshift(tripSnapshot()); writeSaved(list); renderSaved();
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";   // 同一個檔案再選一次也要能觸發
+  });
+
+  /* ==================== 狀態畫面 ==================== */
+
   function showEmpty(){
+    var l = L();
     totalsBar.hidden = true;
     out.innerHTML =
       '<div class="empty">' +
-        '<h2>先填左邊，或直接看一份範例</h2>' +
-        '<p>填完按「排一條路線」，會產生含轉乘指引、營業時間、雨天備案與花費的行程；每一站都能移除，下面的金額會跟著重算。</p>' +
-        '<div class="demo"><button type="button" class="btn" id="demoBtn">看示範行程</button></div>' +
+        '<h2>' + esc(l.emptyTitle) + '</h2>' +
+        '<p>' + esc(l.emptyBody) + '</p>' +
+        // 內建示範資料只有中文，其他語言不提供，免得外國使用者點開一頁看不懂的東西
+        (LANG === "zh-TW"
+          ? '<div class="demo"><button type="button" class="btn" id="demoBtn">' + esc(l.seeDemo) + '</button></div>'
+          : '') +
       '</div>';
-    document.getElementById("demoBtn").addEventListener("click", function(){
+    var b = document.getElementById("demoBtn");
+    if (b) b.addEventListener("click", function(){
       state = normalize(DEMO, readForm(), true);
       render();
-      window.scrollTo({top: 0, behavior: "smooth"});
+      window.scrollTo({top:0, behavior:"smooth"});
     });
   }
 
   function showLoading(){
+    var l = L();
     totalsBar.hidden = true;
     out.innerHTML =
-      '<div class="loading">' +
-        '<h2>正在排路線…</h2>' +
-        '<p id="elapsed">查交通銜接、營業時間與花費，通常要 20 至 60 秒。</p>' +
-        '<div class="bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>' +
-      '</div>';
+      '<div class="loading"><h2>' + esc(l.loadingTitle) + '</h2>' +
+      '<p id="elapsed">' + esc(l.loadingBody) + '</p>' +
+      '<div class="bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div></div>';
     var t0 = Date.now();
     clearInterval(timer);
     timer = setInterval(function(){
       var el = document.getElementById("elapsed");
       if (!el) return clearInterval(timer);
-      el.textContent = "查交通銜接、營業時間與花費…已經 " + Math.round((Date.now()-t0)/1000) + " 秒。";
+      el.textContent = L().loadingElapsed(Math.round((Date.now()-t0)/1000));
     }, 1000);
   }
-
-  var ERRS = {
-    bad_request: "條件有地方填得不太對，檢查一下人數跟預算。",
-    no_key: "伺服器還沒設定好 API 金鑰，先把 .env 填完。",
-    no_workspace: "金鑰需要指定 workspace，把 ANTHROPIC_WORKSPACE_ID 填進 .env。",
-    rate_limited: "按太快了，等一分鐘再試。",
-    invalid_json: "這次回來的格式跑掉了，再按一次通常就好。",
-    empty_plan: "這次沒排出任何一站，把條件寫得更具體一點會比較穩。",
-    upstream_error: "連線出了點問題，稍後再試一次。",
-    timeout: "這次等太久了，再試一次。",
-    cancelled: "已停止。",
-    network: "連不上伺服器，確認 npm run dev 還在跑。"
-  };
 
   function showError(code, serverMessage){
     clearInterval(timer);
     totalsBar.hidden = true;
-    var msg = ERRS[code] || serverMessage || "連線出了點問題，稍後再試一次。";
-    out.innerHTML = '<div class="err"><h2>沒有排出行程</h2><p>' + esc(msg) + '</p></div>';
+    var l = L();
+    var msg = l.errs[code] || serverMessage || l.errs.upstream_error;
+    out.innerHTML = '<div class="err"><h2>' + esc(l.errTitle) + '</h2><p>' + esc(msg) + '</p></div>';
   }
 
-  /* ---------- submit ---------- */
-  /** 讀 SSE：每個事件是 "event: X\ndata: {...}"，用空行分隔 */
+  /* ==================== 送出與串流 ==================== */
+
   function streamPlan(f, signal, handlers){
     return fetch("/api/plan/stream", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: {"Content-Type":"application/json"},
       body: JSON.stringify(f),
       signal: signal
     }).then(function(r){
@@ -1025,9 +1840,7 @@ textarea{resize:vertical;min-height:60px}
           function(){ throw {code: "upstream_error"}; }
         );
       }
-      var reader = r.body.getReader();
-      var decoder = new TextDecoder();
-      var buf = "";
+      var reader = r.body.getReader(), decoder = new TextDecoder(), buf = "";
 
       function flush(){
         var frames = buf.split("\n\n");
@@ -1044,11 +1857,10 @@ textarea{resize:vertical;min-height:60px}
           if (handlers[ev]) handlers[ev](payload);
         });
       }
-
       function pump(){
         return reader.read().then(function(res){
           if (res.done){ flush(); return; }
-          buf += decoder.decode(res.value, {stream: true});
+          buf += decoder.decode(res.value, {stream:true});
           flush();
           return pump();
         });
@@ -1065,13 +1877,12 @@ textarea{resize:vertical;min-height:60px}
     stopBtn.hidden = false;
     showLoading();
 
-    var live = null;
-    var errored = false;
+    var live = null, errored = false;
 
     function begin(meta){
       live = emptyTrip(f, false);
       live.streaming = true;
-      live.title = (meta && meta.title) || (f.to + " " + f.food + "路線");
+      live.title = (meta && meta.title) || (f.to + " · " + f.food);
       live.summary = (meta && meta.summary) || "";
       state = live;
       render();
@@ -1097,7 +1908,7 @@ textarea{resize:vertical;min-height:60px}
         live.tips = (d && d.tips) || [];
         if (d && d.verifying > 0){
           live.stops.forEach(function(x){
-            if (x.kind !== "transit" && x.verified !== "landmark") x.checking = true;
+            if (x.kind !== "transit" && x.kind !== "stay" && x.verified !== "landmark") x.checking = true;
           });
         }
         render();
@@ -1134,22 +1945,36 @@ textarea{resize:vertical;min-height:60px}
 
   stopBtn.addEventListener("click", function(){ if (ctl) ctl.abort(); });
 
-  /* ---------- demo data (clearly fictional placeholders) ---------- */
+  /* ==================== 內建示範資料（僅中文） ==================== */
+
   var DEMO = {
     title: "台北義式一日：中山線散步",
     summary: "從台中高鐵站北上，中午在中山站附近吃義式，下午在赤峰街一帶走走拍照，傍晚回程。整段以捷運加步行為主，走路距離都在十分鐘內。",
     stops: [
-      {kind:"transit", name:"高鐵 台中→台北", time:"09:00", duration:"約 60 分鐘", howTo:"台中高鐵站搭北上列車至台北站，出站後跟著指標轉乘捷運淡水信義線。", cost:700, costUnit:"每人", notes:["可開電子發票"]},
-      {kind:"transit", name:"捷運 台北車站→中山站", time:"10:15", duration:"約 4 分鐘", howTo:"搭淡水信義線往淡水方向，一站到中山，走 4 號出口，步行 3 分鐘。", cost:20, costUnit:"每人"},
-      {kind:"food", name:"中山站義式餐酒館（示範店家）", time:"11:30", duration:"約 90 分鐘", howTo:"中山站 4 號出口出站後直行，第二個路口右轉。", detail:"手工麵與窯烤披薩為主，兩人分食一份前菜加兩份主餐剛好。", hours:"11:30–14:30、17:30–21:00（週二公休）", cost:750, costUnit:"每人", rainPlan:"店內全室內座位，下雨不影響；從捷運站出口有騎樓可走。", notes:["可指定不辣","可開統編發票","需低消一份主餐"], booking:"假日建議提前三天訂位"},
-      {kind:"sight", name:"赤峰街巷弄（示範景點）", time:"13:30", duration:"約 90 分鐘", howTo:"餐廳步行 6 分鐘即到。", detail:"老公寓改成的選物店與咖啡店密集，紅磚牆與鐵窗花是常見的拍照背景。", hours:"多數店家 12:00 起營業", cost:0, costUnit:"每人", rainPlan:"改到中山地下書街，從 R 出口整段有遮蔽。", notes:["室內外皆有","多數店家可刷卡"]},
-      {kind:"sight", name:"市立美術館（示範）", time:"15:30", duration:"約 120 分鐘", howTo:"中山站搭淡水信義線至圓山站 1 號出口，步行 10 分鐘。", detail:"常設展與特展分開售票，室內空間大，適合下午避開人潮。", hours:"09:30–17:30（週一休館）", cost:30, costUnit:"每人", rainPlan:"本身就是室內行程，雨天首選。", notes:["學生票半價","可開發票"]},
-      {kind:"transit", name:"捷運＋高鐵 回台中", time:"18:00", duration:"約 90 分鐘", howTo:"圓山站搭淡水信義線至台北車站，轉高鐵南下。", cost:720, costUnit:"每人", notes:["離峰班次較便宜"]}
+      {kind:"transit", day:1, verified:"landmark", name:"高鐵 台中→台北", time:"09:00", duration:"約 60 分鐘", area:"烏日區",
+       howTo:"台中高鐵站搭北上列車至台北站，出站後跟著指標轉乘捷運淡水信義線。", cost:700, costUnit:"每人", notes:["可開電子發票"]},
+      {kind:"transit", day:1, verified:"landmark", name:"捷運 台北車站→中山站", time:"10:15", duration:"約 4 分鐘", area:"中正區",
+       howTo:"搭淡水信義線往淡水方向，一站到中山，走 4 號出口，步行 3 分鐘。", cost:20, costUnit:"每人"},
+      {kind:"food", day:1, verified:"generic", name:"中山站周邊義式餐酒館（示範）", time:"11:30", duration:"約 90 分鐘", area:"中山區",
+       howTo:"中山站 4 號出口出站後直行，第二個路口右轉。",
+       detail:"手工麵與窯烤披薩為主，兩人分食一份前菜加兩份主餐剛好。",
+       hours:"11:30–14:30、17:30–21:00（週二公休）", cost:750, costUnit:"每人",
+       rainPlan:"店內全室內座位，從捷運站出口有騎樓可走。",
+       notes:["可指定不辣","可開統編發票"], booking:"假日建議提前三天訂位"},
+      {kind:"sight", day:1, verified:"landmark", name:"赤峰街巷弄（示範景點）", time:"13:30", duration:"約 90 分鐘", area:"大同區",
+       howTo:"餐廳步行 6 分鐘即到。",
+       detail:"老公寓改成的選物店與咖啡店密集，紅磚牆與鐵窗花是常見的拍照背景。",
+       hours:"多數店家 12:00 起營業", cost:0, costUnit:"每人",
+       rainPlan:"改到中山地下書街，從 R 出口整段有遮蔽。", notes:["室內外皆有"]},
+      {kind:"stay", day:1, verified:"generic", name:"中山區商旅（示範）", time:"18:30", duration:"—", area:"中山區",
+       detail:"早鳥價含雙人早餐，走路到捷運站 5 分鐘。", cost:1300, costUnit:"每晚",
+       rainPlan:"就在捷運站旁，下雨走地下街可到。", notes:[]},
+      {kind:"transit", day:1, verified:"landmark", name:"捷運＋高鐵 回台中", time:"20:00", duration:"約 90 分鐘", area:"中山區",
+       howTo:"中山站搭淡水信義線至台北車站，轉高鐵南下。", cost:720, costUnit:"每人", notes:["離峰班次較便宜"]}
     ],
     extras: [
-      {name:"寧夏夜市（示範）", kind:"food", why:"若想把晚餐留在台北，走路從中山站約 12 分鐘，小吃選擇多。", cost:250, costUnit:"每人", area:"大同區"},
-      {name:"迪化街老屋咖啡（示範）", kind:"sight", why:"人比赤峰街少，二樓窗邊採光好，適合拍照。", cost:180, costUnit:"每人", area:"大同區"},
-      {name:"中山站商旅（示範）", kind:"stay", why:"早鳥價含雙人早餐，走路到捷運站 5 分鐘。", cost:2600, costUnit:"每晚", area:"中山區"}
+      {name:"寧夏夜市（示範）", kind:"food", why:"若想把晚餐留在台北，走路從中山站約 12 分鐘。", cost:250, costUnit:"每人", area:"大同區"},
+      {name:"迪化街老屋咖啡（示範）", kind:"sight", why:"人比赤峰街少，二樓窗邊採光好。", cost:180, costUnit:"每人", area:"大同區"}
     ],
     tips: [
       "示範資料裡的店名與價格都是虛構的，只用來看版面。",
@@ -1158,13 +1983,14 @@ textarea{resize:vertical;min-height:60px}
     ]
   };
 
-  /* ---------- boot ---------- */
-  showEmpty();
+  /* ==================== 啟動 ==================== */
+
+  applyLang();
 
   fetch("/healthz")
     .then(function(r){ return r.json(); })
     .then(function(h){ document.getElementById("stamp").textContent = "MODEL / " + (h.model || "?"); })
-    .catch(function(){ document.getElementById("stamp").textContent = "後端未連線"; });
+    .catch(function(){ document.getElementById("stamp").textContent = L().backendOff; });
 })();
 </script>
 </body>

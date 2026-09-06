@@ -2,7 +2,14 @@ import { config } from "./config.js";
 import { extractJson } from "./lib/json.js";
 import { tavilySearch } from "./lib/tavily.js";
 import { ask } from "./llm.js";
-import type { PlanRequest, Stop } from "./types.js";
+import type { LangCode, PlanRequest, Stop } from "./types.js";
+
+const NOTE_LANG: Record<LangCode, string> = {
+  "zh-TW": "繁體中文",
+  en: "English",
+  fr: "français",
+  ja: "日本語",
+};
 
 export type Candidate = { name: string; note: string; url: string; district: string };
 
@@ -57,6 +64,12 @@ export async function verifyStop(
     "   （填空字串可以，但前提是你已經確認它不在別區）。",
     "3. source 是引用的結果編號（上面的方括號數字）。",
     "4. note 只能寫結果裡讀得到的資訊。",
+    ...(form.lang === "zh-TW"
+      ? []
+      : [
+          `5. note 用 ${NOTE_LANG[form.lang]} 寫，但 name 保留搜尋結果裡的中文原文不要翻譯 ——`,
+          "   使用者要拿店名去對照招牌、問路。",
+        ]),
     "5. 找不到明確的店名就回 []。這是可以接受的答案。",
   ].filter(Boolean).join("\n");
 

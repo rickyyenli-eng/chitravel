@@ -16,6 +16,7 @@ export type PlaceSuggestion = {
 export async function placesAutocomplete(
   input: string,
   sessionToken: string,
+  lang = "zh-TW",
   signal?: AbortSignal,
 ): Promise<PlaceSuggestion[]> {
   if (!config.googleKey || input.trim().length < 2) return [];
@@ -32,7 +33,9 @@ export async function placesAutocomplete(
     },
     body: JSON.stringify({
       input,
-      languageCode: "zh-TW",
+      // 用使用者的語言回地名，但 Google 對台灣小地點常常只有中文，
+      // 回不出譯名時它會退回原文 —— 這正是我們要的
+      languageCode: lang,
       regionCode: "TW",
       includedRegionCodes: ["tw"], // 只回台灣的地點，出國行程不是現在的範圍
       sessionToken,
@@ -69,6 +72,7 @@ export async function placesAutocomplete(
 export async function reverseGeocode(
   lat: number,
   lng: number,
+  lang = "zh-TW",
   signal?: AbortSignal,
 ): Promise<string> {
   if (!config.googleKey) return "";
@@ -76,7 +80,7 @@ export async function reverseGeocode(
   const url =
     "https://maps.googleapis.com/maps/api/geocode/json" +
     `?latlng=${encodeURIComponent(`${lat},${lng}`)}` +
-    "&language=zh-TW&region=tw" +
+    `&language=${encodeURIComponent(lang)}&region=tw` +
     `&key=${encodeURIComponent(config.googleKey)}`;
 
   const res = await fetch(url, { signal });

@@ -1,4 +1,11 @@
-import type { PlanRequest } from "./types.js";
+import type { LangCode, PlanRequest } from "./types.js";
+
+const LANG_NAME: Record<LangCode, string> = {
+  "zh-TW": "繁體中文",
+  en: "English",
+  fr: "français",
+  ja: "日本語",
+};
 
 /**
  * 系統提示：講清楚角色與紀律，跟每次都會變的條件分開放，
@@ -68,7 +75,7 @@ export function buildPlanPrompt(f: PlanRequest): string {
     "4. 每個非交通的 stop 都要有 rainPlan。",
     "5. notes 要反映特殊要求（不吃辣、可開發票、無障礙、親子友善等）。",
     "6. extras 給 3 到 5 個可以加進行程的私房或備選點。",
-    "7. 全部用繁體中文，地名與路線用台灣慣用說法。",
+    ...languageRules(f.lang),
     `8. 總花費盡量貼近每人預算 NT$${f.budget}。`,
     "9. 店名要誠實，用 verified 標示可信度：",
     "   - 捷運站、公園、園區、美術館、博物館這類長期存在的公共地標，直接寫名字，verified 填 landmark。",
@@ -91,5 +98,68 @@ export function buildPlanPrompt(f: PlanRequest): string {
           "16. costUnit 用「每晚」時，金額請寫每人每晚（先按人數分攤過），加總才不會錯。",
         ]
       : ["12. 這是當日來回，所有 stop 的 day 都填 1，不要安排住宿。"]),
+  ].join("\n");
+}
+
+/**
+ * 語言規則。
+ *
+ * 對外語使用者最要緊的一件事：地名一定要留中文原文。
+ * 「Ximen Station」給不了計程車司機看，也對不上站內的招牌 ——
+ * 台灣的指標多半中英並列，但小吃店的招牌只有中文。
+ */
+function languageRules(lang: LangCode): string[] {
+  if (lang === "zh-TW") {
+    return ["7. 全部用繁體中文，地名與路線用台灣慣用說法。"];
+  }
+  const name = LANG_NAME[lang];
+  return [
+    `7. 所有文字都用 ${name} 撰寫（title、summary、name、detail、howTo、hours、rainPlan、notes、tips 全部）。`,
+    `7-a. 但台灣的地名、車站、路線、店家名稱必須保留中文原文，寫成「${name}譯名（中文原文）」，`,
+    "     例如 \"Ximending (西門町)\"、\"Blue Line / Bannan Line (板南線)\"、\"Exit 6 (6號出口)\"。",
+    "     使用者要拿這些字去對照站內招牌、問路、給司機看 —— 只有譯名等於沒用。",
+    "7-b. 金額一律用新臺幣整數，不要換算成其他幣別（匯率每天在動，換算只會誤導）。",
+  ];
+}
+
+/* ------------------------------------------------------------------ *
+ * 重排時間
+ * ------------------------------------------------------------------ */
+
+export const REPLAN_SYSTEM = [
+  "你在調整一份「使用者已經自己編輯過」的行程：他刪掉了幾站，或插了幾站進去。",
+  "你的工作只有一件：把時間重新排順，並修好交通段的敘述。",
+  "不准增加站、不准刪除站、不准更換地點、不准改動價格 —— 站的數量與順序完全照給你的來。",
+  "只輸出 JSON，不寫任何說明文字。",
+].join("\n");
+
+export function buildReplanPrompt(
+  f: PlanRequest,
+  stops: Array<{ kind: string; name: string; time: string; duration: string; area: string; day: number }>,
+): string {
+  const list = stops
+    .map((s, i) => `${i + 1}. [${s.kind}] ${s.name}${s.area ? `（${s.area}）` : ""}　原時間 ${s.time || "未定"}　停留 ${s.duration || "未定"}`)
+    .join("\n");
+
+  return [
+    "目前的站序（使用者編輯後的結果）：",
+    "",
+    list,
+    "",
+    `出發時間：${f.start}　天數：${f.days}　人數：${f.people} 人`,
+    "",
+    "請重新排時間，輸出：",
+    '{"stops":[{"time":"09:30","duration":"約 40 分鐘","howTo":"怎麼從上一站過來","day":1}],"note":"一句話說明你調整了什麼"}',
+    "",
+    "規則：",
+    `1. stops 陣列長度必須剛好是 ${stops.length}，順序與上面一一對應。`,
+    "2. 時間要接得上：前一站的結束時間加上移動時間，才是下一站的開始時間。",
+    "3. 交通段（kind 是 transit）的 howTo 要照新的前後站改寫；非交通段的 howTo 寫從上一站怎麼過來。",
+    "4. 移動時間要合理，別把步行 15 分鐘算成 5 分鐘。",
+    f.days > 1
+      ? `5. 這是 ${f.days} 天的行程，day 依照原本的分日不要亂改，除非時間真的排不下才順延。`
+      : "5. 這是當日來回，所有 day 都填 1。",
+    "6. 排不下的話在 note 裡直說（例如「最後一站會趕不上末班車」），不要硬塞。",
+    ...(f.lang === "zh-TW" ? [] : [`7. duration、howTo 與 note 用 ${LANG_NAME[f.lang]} 撰寫，台灣地名保留中文原文。`]),
   ].join("\n");
 }

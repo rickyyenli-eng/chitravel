@@ -5,6 +5,10 @@ import { z } from "zod";
  * 前端渲染什麼、後端要 AI 吐什麼，都以這裡為準。
  */
 
+/** 介面與行程輸出的語言 */
+export const Lang = z.enum(["zh-TW", "en", "fr", "ja"]);
+export type LangCode = z.infer<typeof Lang>;
+
 export const StopKind = z.enum(["transit", "food", "sight", "stay", "other"]);
 /** 每晚 = 每人每晚（住宿已按人數分攤過），這樣加總才不用猜一間房住幾個人 */
 export const CostUnit = z.enum(["每人", "每組", "每晚"]);
@@ -28,10 +32,13 @@ export const PlanRequestSchema = z.object({
   start: z.string().trim().max(10).default("09:00"),
   people: z.coerce.number().int().min(1).max(20).default(2),
   budget: z.coerce.number().int().min(0).max(1_000_000).default(0),
-  transport: z.array(z.string().max(20)).max(12).default([]),
-  needs: z.array(z.string().max(20)).max(12).default([]),
-  include: z.array(z.string().max(20)).max(12).default([]),
+  // 上限 40 而非 20：法文的「Train à grande vitesse」有 22 個字元，
+  // 20 會把整個法文介面擋在 400
+  transport: z.array(z.string().max(40)).max(12).default([]),
+  needs: z.array(z.string().max(40)).max(12).default([]),
+  include: z.array(z.string().max(40)).max(12).default([]),
   notes: z.string().trim().max(500).default(""),
+  lang: Lang.catch("zh-TW").default("zh-TW"),
 });
 export type PlanRequest = z.infer<typeof PlanRequestSchema>;
 

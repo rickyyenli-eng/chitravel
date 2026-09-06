@@ -1,6 +1,7 @@
 import { Hono, type Context } from "hono";
 import { config } from "../config.js";
 import { placesAutocomplete, reverseGeocode } from "../lib/google.js";
+import { Lang } from "../types.js";
 import { allow } from "../lib/rate-limit.js";
 
 export const placesRoute = new Hono();
@@ -18,10 +19,11 @@ placesRoute.get("/places", async (c) => {
 
   const q = (c.req.query("q") ?? "").trim();
   const session = (c.req.query("session") ?? "").slice(0, 64);
+  const lang = Lang.catch("zh-TW").parse(c.req.query("lang"));
   if (q.length < 2) return c.json({ ok: true, suggestions: [] });
 
   try {
-    const suggestions = await placesAutocomplete(q.slice(0, 100), session);
+    const suggestions = await placesAutocomplete(q.slice(0, 100), session, lang);
     return c.json({ ok: true, suggestions });
   } catch (err) {
     console.error("[places] 失敗", err);
@@ -41,7 +43,8 @@ placesRoute.get("/whereami", async (c) => {
   }
 
   try {
-    const name = await reverseGeocode(lat, lng);
+    const lang = Lang.catch("zh-TW").parse(c.req.query("lang"));
+    const name = await reverseGeocode(lat, lng, lang);
     return name ? c.json({ ok: true, name }) : c.json({ ok: false, code: "not_found" });
   } catch (err) {
     console.error("[whereami] 失敗", err);
