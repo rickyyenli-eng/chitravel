@@ -79,6 +79,12 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
   const W = WARN[lang];
   const issues: TransitIssue[] = [];
 
+  // 「往象山方向」「往淡水方向」裡的是終點站，不是這趟會停的站。
+  // 不剃掉的話會被當成行程站，然後理所當然地「不在這條線上」。
+  const body = text
+    .replace(/往[^，,。；;]{1,8}?方向/g, " ")
+    .replace(/(?:direction|vers|方面)\s*[^，,。；;]{1,20}/gi, " ");
+
   // 舊站名：模型的訓練資料裡多半是舊的，但月台上寫的是新的
   for (const [old, now] of Object.entries(DB.renamed)) {
     const cur = DB.stations[normStation(now)];
@@ -93,7 +99,7 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
   for (const [, s] of Object.entries(DB.stations)) {
     if (!cities.includes(s.city)) continue;
     if (s.display.length < 2) continue;
-    if (text.includes(s.display)) found.push({ display: s.display, lines: s.lines });
+    if (body.includes(s.display)) found.push({ display: s.display, lines: s.lines });
   }
   // 站數不足就無從判斷路線，但前面抓到的改名警告要留著
   if (found.length < 2) return issues;
@@ -103,7 +109,7 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
   for (const [key, l] of Object.entries(DB.lines)) {
     if (!cities.includes(l.city) || !l.name) continue;
     // 正式名稱或顏色別名，任一命中都算提到了這條線
-    if ([l.name, ...(l.aliases || [])].some((n) => n && text.includes(n))) mentioned.push(key);
+    if ([l.name, ...(l.aliases || [])].some((n) => n && body.includes(n))) mentioned.push(key);
   }
 
   // 長站名會包含短站名（例如「台北車站」含「台北」），只留最長的那些
@@ -112,16 +118,26 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
     .slice(0, 6);
   if (uniq.length < 2) return issues;
 
-  if (mentioned.length) {
-    // 說了搭某條線，就檢查提到的站是不是真的在那條線上
-    for (const lineKey of mentioned) {
-      const off = uniq.filter((s) => !s.lines.includes(lineKey));
-      if (off.length && off.length < uniq.length) {
-        const lineName = DB.lines[lineKey]?.name ?? lineKey;
-        for (const s of off) {
-          const real = s.lines.map((k) => DB.lines[k]?.name ?? k).join("、");
-          issues.push({ text: W.notOnLine(s.display, lineName, real) });
-        }
+  if (mentioned.length === 1) {
+    // 只提到一條線 = 沒有轉乘，那所有提到的站都該在那條線上
+    const lineKey = mentioned[0]!;
+    const off = uniq.filter((s) => !s.lines.includes(lineKey));
+    if (off.length && off.length < uniq.length) {
+      const lineName = DB.lines[lineKey]?.name ?? lineKey;
+      for (const s of off) {
+        const real = s.lines.map((k) => DB.lines[k]?.name ?? k).join("、");
+        issues.push({ text: W.notOnLine(s.display, lineName, real) });
+      }
+    }
+  } else if (mentioned.length >= 2) {
+    // 提到兩條以上 = 在講轉乘。哪一段搭哪條線無從逐句對應，
+    // 只檢查「每個站至少在其中一條線上」—— 這樣仍抓得到硬湊的站，
+    // 又不會把正確的轉乘敘述誤判成錯誤。
+    for (const s of uniq) {
+      if (!s.lines.some((l) => mentioned.includes(l))) {
+        const real = s.lines.map((k) => DB.lines[k]?.name ?? k).join("、");
+        const names = mentioned.map((k) => DB.lines[k]?.name ?? k).join("、");
+        issues.push({ text: W.notOnLine(s.display, names, real) });
       }
     }
   } else {
