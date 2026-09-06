@@ -1,3 +1,4 @@
+import { promptIndex } from "./lib/metro.js";
 import type { LangCode, PlanRequest } from "./types.js";
 
 const LANG_NAME: Record<LangCode, string> = {
@@ -65,6 +66,7 @@ export function buildPlanPrompt(f: PlanRequest): string {
     `要包含：${f.include.join("、") || "餐廳與景點"}`,
     `補充：${f.notes || "無"}`,
     "",
+    ...(promptIndex(f.to) ? [promptIndex(f.to), ""] : []),
     "只輸出這個 JSON 物件：",
     SHAPE,
     "",
@@ -73,6 +75,9 @@ export function buildPlanPrompt(f: PlanRequest): string {
     '2. stops 依時間排序。交通段用 kind:"transit"，必須寫清楚搭哪條路線、在哪一站轉乘、走幾號出口、步行幾分鐘。',
     '3. 若「要包含」有住宿，加一個 kind:"stay" 的 stop，在 detail 寫早鳥價與是否供應早餐。',
     "4. 每個非交通的 stop 都要有 rainPlan。",
+    "4-a. hours 必填（交通段除外），而且排定的 time 必須落在 hours 之內。",
+    "     夜市、酒吧不要排在中午；早餐店不要排在傍晚；博物館別排在快閉館時還停留兩小時。",
+    "     不確定營業時間就把 time 排在該類型店家一定開著的時段，別賭。",
     "5. notes 要反映特殊要求（不吃辣、可開發票、無障礙、親子友善等）。",
     "6. extras 給 3 到 5 個可以加進行程的私房或備選點。",
     ...languageRules(f.lang),

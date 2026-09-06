@@ -308,6 +308,10 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
 .cand .n{font-weight:500}
 .cand .s{font-size:12px;color:var(--info);text-decoration:none;border-bottom:1px solid currentColor;white-space:nowrap;margin-left:4px}
 .cand .s:hover{opacity:.75}
+.warns{margin-top:10px;padding:9px 11px;border-radius:8px;background:var(--warn-soft);border-left:3px solid var(--warn)}
+.warns .h{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--warn);margin-bottom:5px}
+.warns div.w{font-size:13px;color:var(--warn);line-height:1.55}
+.warns div.w + div.w{margin-top:3px}
 .checking{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-top:10px}
 
 .book{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line)}
@@ -594,6 +598,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       downloadPdf:"下載 PDF", pdfHint:"在跳出的視窗選「儲存為 PDF」（手機是分享→儲存到檔案）。",
       downloadIcs:"加入行事曆", savedOn:"存於",
       parking:"附近停車",
+      warnHead:"這幾點要確認",
       backendOff:"後端未連線"
     },
 
@@ -682,6 +687,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       downloadPdf:"Download PDF", pdfHint:"Pick “Save as PDF” in the dialog that opens (on phones: Share → Save to Files).",
       downloadIcs:"Add to calendar", savedOn:"saved",
       parking:"Parking nearby",
+      warnHead:"Worth double-checking",
       backendOff:"Backend offline"
     },
 
@@ -770,6 +776,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       downloadPdf:"Télécharger en PDF", pdfHint:"Choisissez « Enregistrer au format PDF » dans la fenêtre qui s’ouvre (sur mobile : Partager → Enregistrer dans Fichiers).",
       downloadIcs:"Ajouter au calendrier", savedOn:"enregistré le",
       parking:"Stationnement",
+      warnHead:"À vérifier",
       backendOff:"Serveur hors ligne"
     },
 
@@ -858,6 +865,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       downloadPdf:"PDFをダウンロード", pdfHint:"開いたウィンドウで「PDFとして保存」を選んでください（スマホは共有→ファイルに保存）。",
       downloadIcs:"カレンダーに追加", savedOn:"保存日",
       parking:"周辺の駐車場",
+      warnHead:"要確認",
       backendOff:"バックエンド未接続"
     }
   };
@@ -1170,6 +1178,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       cost: Number(s && s.cost) || 0,
       costUnit: (s && s.costUnit) || "每人",
       verified: (s && s.verified) || "unverified",
+      warnings: Array.isArray(s && s.warnings) ? s.warnings : [],
       candidates: null,
       checking: false,
       rainPlan: (s && s.rainPlan) || "",
@@ -1294,6 +1303,12 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
         (s.booking ? '<span class="note book">' + esc(s.booking) + '</span>' : '') + '</div>';
     }
 
+    var warns = "";
+    if (s.warnings && s.warnings.length){
+      warns = '<div class="warns"><div class="h">' + esc(l.warnHead) + '</div>' +
+        s.warnings.map(function(w){ return '<div class="w">' + esc(w) + '</div>'; }).join("") + '</div>';
+    }
+
     var cands = "";
     if (s.kind === "stay"){
       cands = bookingBlock(state.form, s);
@@ -1336,7 +1351,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
           '<div class="tags" style="margin-top:6px">' +
             meta.map(function(m){ return '<span class="tag">' + esc(m) + '</span>'; }).join("") + flag +
           '</div>' +
-          rows + notes +
+          rows + warns + notes +
           (s.kind === "transit" ? "" : mapLinks(s, prev)) + cands +
           '<div class="cfoot"><button type="button" class="mini" data-toggle="' + s.id + '">' +
             esc(s.off ? l.restoreStop : l.removeStop) + '</button></div>' +
@@ -1651,7 +1666,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       stops: state.stops.map(function(s){
         return {kind:s.kind, day:s.day, name:s.name, time:s.time, duration:s.duration,
                 howTo:s.howTo, detail:s.detail, hours:s.hours, area:s.area,
-                cost:s.cost, costUnit:s.costUnit, verified:s.verified,
+                cost:s.cost, costUnit:s.costUnit, verified:s.verified, warnings:s.warnings,
                 rainPlan:s.rainPlan, notes:s.notes, booking:s.booking, off:s.off};
       }),
       extras: state.extras.map(function(x){

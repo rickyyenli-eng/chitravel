@@ -2,7 +2,9 @@ import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import { config } from "../config.js";
 import { hashKey, TtlCache } from "../lib/cache.js";
+import { checkHours } from "../lib/hours.js";
 import { extractJson } from "../lib/json.js";
+import { checkTransit } from "../lib/metro.js";
 import { allow } from "../lib/rate-limit.js";
 import { MOCK_TRIP_JSON } from "../lib/mock-trip.js";
 import { TripStreamParser } from "../lib/stream-parse.js";
@@ -119,7 +121,7 @@ planRoute.post("/plan/stream", async (c) => {
     try {
       if (cached) {
         push("meta", { title: cached.title, summary: cached.summary });
-        for (const stop of cached.stops) push("stop", stop);
+        for (const stop of cached.stops) push("stop", { ...stop, warnings: auditStop(stop, form) });
         for (const extra of cached.extras) push("extra", extra);
         push("done", { tips: cached.tips, cached: true, ms: Date.now() - started, verifying: 0 });
         const savedCandidates = verifyCache.get(key);
@@ -138,7 +140,7 @@ planRoute.post("/plan/stream", async (c) => {
         meta: (m) => push("meta", m),
         stop: (s) => {
           stops.push(s);
-          push("stop", s);
+          push("stop", { ...s, warnings: auditStop(s, form) });
         },
         extra: (x) => {
           extras.push(x);
@@ -188,13 +190,16 @@ planRoute.post("/plan/stream", async (c) => {
 
       if (trip.success && trip.data.stops.length > 0) {
         cache.set(key, trip.data);
+        const flagged = stops.filter((s) => auditStop(s, form).length > 0).length;
         push("done", {
           tips: trip.data.tips,
           cached: false,
           ms: Date.now() - started,
           verifying: willVerify,
+          flagged,
         });
         logPlan(form, trip.data, res, started);
+        if (flagged) console.log(`[audit] ${flagged} 站有疑慮（路線或營業時間）`);
       } else if (stops.length > 0) {
         // 已經送出去的那幾站是有效的，別因為收尾解析失敗就把整頁清掉
         push("done", { tips: [], cached: false, ms: Date.now() - started, partial: true, verifying: willVerify });
@@ -283,6 +288,26 @@ function failFromError(c: Context, err: unknown) {
   }
   console.error("[plan] 未預期錯誤", err);
   return fail(c, 500, "upstream_error", "伺服器出了點問題，稍後再試。");
+}
+
+/**
+ * 出貨前的最後一道檢查。
+ *
+ * 模型排完之後，用真實的捷運路網與營業時間比對一次。實測抓到的兩類錯誤：
+ * 「中正紀念堂在板南線上」（不在）、「華西街夜市 11:40」（夜市中午沒開）。
+ * 這兩種錯在畫面上都看不出來，使用者會照著走過去才發現。
+ */
+function auditStop(s: Stop, form: PlanRequest): string[] {
+  const out: string[] = [];
+  if (s.kind === "transit") {
+    for (const i of checkTransit(`${s.name} ${s.howTo}`, form.to, form.lang)) out.push(i.text);
+  } else {
+    const h = checkHours(s.time, s.hours, s.duration, form.lang);
+    if (h) out.push(h);
+    // 非交通站的 howTo 裡也常夾著捷運路線，一併檢查
+    for (const i of checkTransit(s.howTo, form.to, form.lang)) out.push(i.text);
+  }
+  return out.slice(0, 3);
 }
 
 function logPlan(

@@ -12,7 +12,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "models": "tsx scripts/list-models.ts"
+    "models": "tsx scripts/list-models.ts",
+    "fetch:metro": "tsx scripts/fetch-metro.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
