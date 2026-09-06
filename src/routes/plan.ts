@@ -10,6 +10,7 @@ import { MOCK_TRIP_JSON } from "../lib/mock-trip.js";
 import { TripStreamParser } from "../lib/stream-parse.js";
 import { ask, askStream, estimateCostUsd, LlmError } from "../llm.js";
 import { buildPlanPrompt, SYSTEM_PROMPT } from "../prompt.js";
+import { railPromptBlock } from "../lib/rail.js";
 import { verifyStop, type Candidate } from "../verify.js";
 import {
   PlanRequestSchema,
@@ -45,9 +46,10 @@ planRoute.post("/plan", async (c) => {
   }
 
   try {
+    const railBlock = await railPromptBlock(form);
     const res = await ask({
       system: SYSTEM_PROMPT,
-      prompt: buildPlanPrompt(form),
+      prompt: buildPlanPrompt(form, railBlock),
       maxTokens: 6000 + (form.days - 1) * 4500,
       prefill: "{",
     });
@@ -168,9 +170,11 @@ planRoute.post("/plan/stream", async (c) => {
         return;
       }
 
+      // 真實班次要在下 prompt 之前拿到。查不到就是空字串，行程照樣出得來。
+      const railBlock = await railPromptBlock(form);
       const res = await askStream({
         system: SYSTEM_PROMPT,
-        prompt: buildPlanPrompt(form),
+        prompt: buildPlanPrompt(form, railBlock),
         // 多天行程要寫的東西多很多，額度不夠會被硬生生截斷
         maxTokens: 6000 + (form.days - 1) * 4500,
         prefill: "{",

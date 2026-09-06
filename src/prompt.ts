@@ -49,7 +49,7 @@ const SHAPE = JSON.stringify({
   tips: ["提醒事項"],
 });
 
-export function buildPlanPrompt(f: PlanRequest): string {
+export function buildPlanPrompt(f: PlanRequest, railBlock = ""): string {
   return [
     "請依下列條件排一趟行程。",
     "",
@@ -67,6 +67,7 @@ export function buildPlanPrompt(f: PlanRequest): string {
     `補充：${f.notes || "無"}`,
     "",
     ...(promptIndex(f.to) ? [promptIndex(f.to), ""] : []),
+    ...(railBlock ? [railBlock, ""] : []),
     "只輸出這個 JSON 物件：",
     SHAPE,
     "",
@@ -89,6 +90,9 @@ export function buildPlanPrompt(f: PlanRequest): string {
     "     detail 寫怎麼挑（看哪個招牌、避開什麼、大概多少錢），verified 填 generic。",
     "   - 真的要指名但沒有十足把握，照樣寫出來，但 verified 填 unverified。",
     "10. 交通段（kind:transit）的 verified 一律填 landmark。",
+    "10-a. 台鐵／高鐵車次只能從上面提供的實際班次裡挑，連同它的發車與抵達時刻一起寫進",
+    "     name 或 howTo。沒有提供班表的路段就不要寫車次，只寫「搭高鐵北上，約 1 小時」",
+    "     這種程度 —— 編一個不存在的車次，旅客是拿著它去買票的。",
     "11. 非交通的 stop 都要填 area，寫最小可辨識的地理範圍（行政區、商圈或老街名），",
     "    不要只寫城市名。這欄會用來把跑錯區的搜尋結果濾掉。",
     ...(f.days > 1

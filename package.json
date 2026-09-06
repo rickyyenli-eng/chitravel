@@ -13,7 +13,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "models": "tsx scripts/list-models.ts",
-    "fetch:metro": "tsx scripts/fetch-metro.ts"
+    "fetch:metro": "tsx scripts/fetch-metro.ts",
+    "fetch:rail": "tsx scripts/fetch-rail.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
