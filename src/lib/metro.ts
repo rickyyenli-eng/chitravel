@@ -217,6 +217,26 @@ function blank(text: string, re: RegExp): string {
 
 const SQUASH = /[\s　]/g;
 
+/**
+ * 比對前把全形標點換成半形。
+ *
+ * 線上實測：模型寫「台北 101／世貿站」（全形斜線），資料裡是「台北101/世貿」，
+ * 兩個字串永遠對不起來 —— 那一站的所有站數檢查都靜靜失效，
+ * 同一趟裡兩處錯誤（2 站寫成 3 站、5 站寫成 7 站）就這樣漏掉。
+ */
+function halfWidth(x: string): string {
+  return x
+    .replace(/／/g, "/")
+    .replace(/－|—|–/g, "-")
+    .replace(/．/g, ".")
+    .replace(/：/g, ":")
+    .replace(/＆/g, "&");
+}
+
+function normKey(x: string): string {
+  return halfWidth(x).replace(SQUASH, "");
+}
+
 /** 一處站數宣稱，座標是「原文」的，才splice 得回去 */
 export type CountHit = {
   start: number;
@@ -255,8 +275,14 @@ function squashWithMap(masked: string): { body: string; map: number[] } {
 export function scanStopCounts(text: string, dest: string): CountHit[] {
   const cities = citiesFor(dest);
   if (!cities.length || !text) return [];
-  // 「A 或 B」兩種走法混在一句裡，站數對不到哪一段
-  if (/或|或是|\bor\b|\bou\b|または/i.test(text)) return [];
+  // 「A 或 B」兩種走法混在一句裡，站數對不到哪一段。
+  //
+  // 但只有「或」出現還不夠 —— 「捷運台北車站（R線或BL線月台）」講的是月台不是走法，
+  // 原本一律跳過，害那一段的站數錯誤（寫 1 站實際 2 站）整個漏掉。
+  // 現在要「或」後面接著移動動詞才算另一種走法。
+  if (/(?:或|或是)[^，,。；;]{0,4}?(?:搭|乘|走|步行|轉|坐|騎)|\b(?:or|ou)\b[^,.;]{0,12}?(?:walk|take|ride|prendre|marche)|または[^、。]{0,6}?(?:歩|乗|行)/i.test(text)) {
+    return [];
+  }
 
   let masked = blank(text, /往[^，,。；;]{1,8}?方向/g);
   const mentioned: string[] = [];
@@ -268,13 +294,13 @@ export function scanStopCounts(text: string, dest: string): CountHit[] {
   }
 
   // 空白全部拿掉再比對：模型會寫「台北 101/世貿站」，資料裡是「台北101/世貿」
-  const { body, map } = squashWithMap(masked);
+  const { body, map } = squashWithMap(halfWidth(masked));
 
   type Hit = { at: number; display: string; lines: string[] };
   const hits: Hit[] = [];
   for (const [, st] of Object.entries(DB.stations)) {
     if (!cities.includes(st.city) || st.display.length < 2) continue;
-    const d = st.display.replace(SQUASH, "");
+    const d = normKey(st.display);
     for (let i = body.indexOf(d); i !== -1; i = body.indexOf(d, i + 1)) {
       const rest = body.slice(i + d.length);
       if (!/站$/.test(d) && !/^(?:捷運站|車站|站)/.test(rest)) continue;
@@ -294,7 +320,7 @@ export function scanStopCounts(text: string, dest: string): CountHit[] {
     const at = m.index;
     const before = [...hits]
       .reverse()
-      .filter((h) => h.at + h.display.replace(SQUASH, "").length <= at);
+      .filter((h) => h.at + normKey(h.display).length <= at);
     const prev = before[0];
 
     // 兩種寫法，配對方式相反：
@@ -307,7 +333,7 @@ export function scanStopCounts(text: string, dest: string): CountHit[] {
     const gap =
       prev === undefined
         ? ""
-        : body.slice(prev.at + prev.display.replace(SQUASH, "").length, at);
+        : body.slice(prev.at + normKey(prev.display).length, at);
     const paren = prev !== undefined && /^(?:捷運站|車站|站)?[（(]$/.test(gap);
 
     const a = paren ? before[1] : prev;
