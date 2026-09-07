@@ -225,7 +225,7 @@ const SQUASH = /[\s　]/g;
  * 同一趟裡兩處錯誤（2 站寫成 3 站、5 站寫成 7 站）就這樣漏掉。
  */
 function halfWidth(x: string): string {
-  return x
+  return String(x ?? "")
     .replace(/／/g, "/")
     .replace(/－|—|–/g, "-")
     .replace(/．/g, ".")
@@ -508,4 +508,65 @@ export function hopCount(lineKey: string, from: string, to: string): number | un
 export function originOf(name: string): string {
   const m = /^(.*?)\s*(?:→|->|➞|⇒|~|～)\s*.+$/u.exec(String(name || ""));
   return (m ? m[1] : name) ?? "";
+}
+
+/**
+ * 「東門站 → 北投站」的北投站。用來當「下一站」的起點上下文。
+ *
+ * 線上實測第三種漏法：「步行返回捷運台北101/世貿站」之後接
+ * 「捷運至台北車站 — 搭淡水信義線往淡水方向 5 站」，
+ * 起點既不在這一站的標題也不在 howTo 裡，而是在**上一站**。
+ * 實際 7 站、寫 5 站，整段靜靜放過。
+ */
+export function destOf(name: string): string {
+  const m = /^.+?\s*(?:→|->|➞|⇒|~|～)\s*(.+)$/u.exec(String(name || ""));
+  return (m ? m[1] : name) ?? "";
+}
+
+
+/* ───────── 給 leg.ts 用的查詢介面 ───────── */
+
+/** 目的地字串 → 涵蓋哪些城市（leg.ts 要用同一套判斷） */
+export function citiesForPublic(dest: string): string[] {
+  return citiesFor(dest);
+}
+
+/** 這條線的所有營運路線（每條是照順序的站名陣列） */
+export function routesOf(lineKey: string): string[][] {
+  return DB.routes?.[lineKey] ?? [];
+}
+
+/** 站名 → 站資料。認不出來回 undefined，不要猜 */
+export function stationOf(
+  name: string,
+  cities: string[],
+): { display: string; lines: string[] } | undefined {
+  const q = normKey(normStation(name));
+  if (!q) return undefined;
+  let best: { display: string; lines: string[] } | undefined;
+  for (const [, st] of Object.entries(DB.stations)) {
+    if (!cities.includes(st.city)) continue;
+    if (normKey(normStation(st.display)) === q) return { display: st.display, lines: st.lines };
+    // 「台北車站」與「台北」這種包含關係，取最長的那個
+    if (q.includes(normKey(normStation(st.display))) && st.display.length >= 2) {
+      if (!best || st.display.length > best.display.length) best = { display: st.display, lines: st.lines };
+    }
+  }
+  return best;
+}
+
+/**
+ * 路線名 → lineKey。反過來（asName=true）則是 lineKey → 中文名。
+ * 別名一併認：「藍線」就是板南線。
+ */
+export function lineOf(name: string, cities: string[], asName = false): string | undefined {
+  if (asName) return DB.lines[name]?.name;
+  const q = normKey(name);
+  if (!q) return undefined;
+  for (const [key, l] of Object.entries(DB.lines)) {
+    if (!cities.includes(l.city)) continue;
+    const names = [l.name, ...(l.aliases || [])].filter(Boolean);
+    if (names.some((n) => normKey(n) === q || q.includes(normKey(n)))) return key;
+  }
+  return undefined;
 }

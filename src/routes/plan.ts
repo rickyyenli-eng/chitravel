@@ -5,7 +5,8 @@ import { hashKey, TtlCache } from "../lib/cache.js";
 import { checkHours } from "../lib/hours.js";
 import { WARN } from "../lib/warn-text.js";
 import { extractJson } from "../lib/json.js";
-import { checkTransit, fixStopCounts, originOf } from "../lib/metro.js";
+import { checkTransit, destOf, fixStopCounts, originOf } from "../lib/metro.js";
+import { renderLegs } from "../lib/leg.js";
 import { allow } from "../lib/rate-limit.js";
 import { MOCK_TRIP_JSON } from "../lib/mock-trip.js";
 import { TripStreamParser } from "../lib/stream-parse.js";
@@ -328,10 +329,40 @@ function makeAuditor(
   const fresh = (list: string[]) => list.filter((w) => !seen.has(w) && (seen.add(w), true));
   let prev: Stop | undefined;
   return (s) => {
+    // 有 legs 就由我們產生句子：站數、方向、時刻都是算出來的，不用事後解析。
+    // 這是站數漏報補了四次之後的結論 —— 從自由文字反推兩站本來就不可靠。
+    if (s.kind === "transit" && s.legs?.length) {
+      const idx = trains();
+      const r = renderLegs(s.legs, form.lang, form.to, idx);
+      if (r.text) {
+        // 卡片時間 = 這段第一班火車的真實發車時間。文字路徑也是這樣做的，
+        // 兩條路徑要一致，不然同一份行程會有兩種行為
+        const railLeg = s.legs.find((l) => l.mode === "rail" && l.trainNo);
+        const no = railLeg?.trainNo?.replace(/[^0-9A-Za-z]/g, "") ?? "";
+        const real = idx[no] ?? idx[no.padStart(4, "0")];
+
+        const stop = { ...s, howTo: r.text, ...(real ? { time: real.depart } : {}) };
+        const warnings = auditStop(stop, form);
+        warnings.unshift(...r.issues);
+        if (real && prev?.time && toMin(prev.time) > toMin(real.depart)) {
+          warnings.unshift(WARN[form.lang].missTrain(no, real.depart, prev.time));
+        }
+        prev = stop;
+        return { stop, warnings: fresh(warnings).slice(0, 3), fixes: [] };
+      }
+    }
+
     // 先改對再檢查：站數改好了就不該再跳那條警告
     // 標題的起點站要一起帶進去當上下文：「東門站 → 北投站」的東門
     // 不在 howTo 裡，少了它就配不成對
-    const f = fixStopCounts(s.howTo, form.to, form.lang, originOf(s.name));
+    let f = fixStopCounts(s.howTo, form.to, form.lang, originOf(s.name));
+    // 起點有時既不在 howTo 也不在標題裡，而是在上一站的終點：
+    //   「步行返回捷運台北101/世貿站」→「捷運至台北車站，搭 5 站」
+    // 本站找不到可判斷的站數時，才退一步用上一站當上下文，免得亂配對
+    if (!f.notes.length && prev) {
+      const back = fixStopCounts(s.howTo, form.to, form.lang, destOf(prev.name));
+      if (back.notes.length) f = back;
+    }
     let howTo = f.text;
     const notes = [...f.notes];
 

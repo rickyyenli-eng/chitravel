@@ -46,6 +46,32 @@ export type PlanRequest = z.infer<typeof PlanRequestSchema>;
  * AI 回來的資料一律走這裡。
  * 全部用 catch/default，模型少給一個欄位或型別給錯不該讓整份行程掛掉。
  */
+/**
+ * 一段移動。這是「不要讓模型寫句子」的核心 ——
+ * 它只填欄位，路線是否正確、要搭幾站、往哪個方向、句子怎麼寫，
+ * 全部由伺服器用真實路網算出來。
+ *
+ * 為什麼要改成這樣：站數的漏報補了四次（句子裡、標題裡、括號寫法、上一站），
+ * 每一次都是線上實測才發現。從自由文字反推「這個 N 是哪兩站之間」本質上就脆弱。
+ * 改成結構化之後就不用猜。
+ */
+export const LegMode = z.enum(["metro", "rail", "walk", "bus", "taxi", "other"]);
+
+export const LegSchema = z.object({
+  mode: LegMode.catch("other"),
+  /** 捷運路線中文名（板南線）或鐵路種類（高鐵、台鐵自強） */
+  line: z.string().max(20).catch(""),
+  from: z.string().max(30).catch(""),
+  to: z.string().max(30).catch(""),
+  /** 台鐵／高鐵車次 */
+  trainNo: z.string().max(10).catch(""),
+  /** 出口編號，只填數字或代號 */
+  exit: z.string().max(10).catch(""),
+  /** 步行或搭乘分鐘數 */
+  minutes: z.coerce.number().int().min(0).max(600).catch(0),
+});
+export type Leg = z.infer<typeof LegSchema>;
+
 export const StopSchema = z.object({
   kind: StopKind.catch("other"),
   name: z.string().catch("未命名"),
@@ -65,6 +91,8 @@ export const StopSchema = z.object({
   rainPlan: z.string().catch(""),
   notes: z.array(z.string()).catch([]),
   booking: z.string().catch(""),
+  /** 交通段才有。有 legs 時 howTo 由伺服器產生，模型寫的會被覆蓋 */
+  legs: z.array(LegSchema).max(6).catch([]),
 });
 export type Stop = z.infer<typeof StopSchema>;
 

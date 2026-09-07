@@ -1,4 +1,4 @@
-import { fixStopCounts, originOf } from "../src/lib/metro.js";
+import { destOf, fixStopCounts, originOf } from "../src/lib/metro.js";
 
 /**
  * 站數修正。錯配比不修更危險 —— 把數字寫到別段去，使用者不會知道。
@@ -80,9 +80,18 @@ const cases: Array<[string, string, string, string, string?]> = [
     "在西子灣站搭橘1或 99 路公車回哈瑪星站，轉捷運橘線到鹽埕埔站；或直接步行約 20-25 分鐘回鹽埕埔站",
     "「或直接步行」是真的另一種走法 → 仍然跳過",
   ],
+  [
+    "台北",
+    "搭淡水信義線往淡水方向 5 站至台北車站",
+    "搭淡水信義線往淡水方向 7 站至台北車站",
+    "起點在上一站的終點（用 destOf 當上下文）",
+    "步行返回捷運台北 101/世貿站",
+  ],
 ];
 
+
 let pass = 0;
+let total = cases.length;
 for (const [city, input, want, note, title] of cases) {
   const got = fixStopCounts(input, city, "zh-TW", originOf(title ?? "")).text;
   const ok = got === want;
@@ -93,5 +102,18 @@ for (const [city, input, want, note, title] of cases) {
     console.log(`        期望：${want}`);
   }
 }
-console.log(`\n${pass}/${cases.length} 通過`);
-process.exit(pass === cases.length ? 0 : 1);
+// destOf：拿「A → B」的 B 當下一站的起點
+for (const [input, want] of [
+  ["東門站 → 北投站", "北投站"],
+  ["步行返回捷運台北 101/世貿站", "步行返回捷運台北 101/世貿站"],
+  ["台北車站→台中高鐵站", "台中高鐵站"],
+] as Array<[string, string]>) {
+  const got = destOf(input);
+  const ok = got === want;
+  if (ok) pass++;
+  total++;
+  console.log(`  ${ok ? "ok  " : "FAIL"} destOf(${input}) = ${got}`);
+}
+
+console.log(`\n${pass}/${total} 通過`);
+process.exit(pass === total ? 0 : 1);
