@@ -142,18 +142,35 @@ function languageRules(lang: LangCode): string[] {
 
 export const REPLAN_SYSTEM = [
   "你在調整一份「使用者已經自己編輯過」的行程：他刪掉了幾站，或插了幾站進去。",
-  "你的工作只有一件：把時間重新排順，並修好交通段的敘述。",
-  "不准增加站、不准刪除站、不准更換地點、不准改動價格 —— 站的數量與順序完全照給你的來。",
+  "你的工作只有一件：把時間重新排順。",
+  "不准增加站、不准刪除站、不准更換地點、不准改動價格、不准改寫怎麼去的敘述 ——",
+  "站的數量與順序完全照給你的來，轉乘指引與車次都是查證過的，不准動。",
   "只輸出 JSON，不寫任何說明文字。",
 ].join("\n");
 
 export function buildReplanPrompt(
   f: PlanRequest,
-  stops: Array<{ kind: string; name: string; time: string; duration: string; area: string; day: number }>,
+  stops: Array<{
+    kind: string;
+    name: string;
+    time: string;
+    duration: string;
+    area: string;
+    day: number;
+    /** 有班次的火車段：時間是固定的，其他站要繞著它排 */
+    anchor?: boolean;
+  }>,
 ): string {
   const list = stops
-    .map((s, i) => `${i + 1}. [${s.kind}] ${s.name}${s.area ? `（${s.area}）` : ""}　原時間 ${s.time || "未定"}　停留 ${s.duration || "未定"}`)
+    .map(
+      (s, i) =>
+        `${i + 1}. [${s.kind}] ${s.name}${s.area ? `（${s.area}）` : ""}　原時間 ${s.time || "未定"}　停留 ${s.duration || "未定"}` +
+        (s.anchor ? "　★時間固定不可更動（已訂班次）" : ""),
+    )
     .join("\n");
+  const anchors = stops
+    .map((s, i) => (s.anchor ? `第 ${i + 1} 站 ${s.time}` : ""))
+    .filter(Boolean);
 
   return [
     "目前的站序（使用者編輯後的結果）：",
@@ -163,17 +180,26 @@ export function buildReplanPrompt(
     `出發時間：${f.start}　天數：${f.days}　人數：${f.people} 人`,
     "",
     "請重新排時間，輸出：",
-    '{"stops":[{"time":"09:30","duration":"約 40 分鐘","howTo":"怎麼從上一站過來","day":1}],"note":"一句話說明你調整了什麼"}',
+    '{"stops":[{"time":"09:30","duration":"約 40 分鐘","day":1}],"note":"一句話說明你調整了什麼"}',
     "",
     "規則：",
     `1. stops 陣列長度必須剛好是 ${stops.length}，順序與上面一一對應。`,
     "2. 時間要接得上：前一站的結束時間加上移動時間，才是下一站的開始時間。",
-    "3. 交通段（kind 是 transit）的 howTo 要照新的前後站改寫；非交通段的 howTo 寫從上一站怎麼過來。",
+    "3. 只輸出 time、duration、day 三個欄位。怎麼去的敘述不要動，也不要輸出 —— ",
+    "   那裡面的路線、方向、站數、出口編號與車次都是查過真實資料的，改寫只會弄壞它。",
     "4. 移動時間要合理，別把步行 15 分鐘算成 5 分鐘。",
     f.days > 1
       ? `5. 這是 ${f.days} 天的行程，day 依照原本的分日不要亂改，除非時間真的排不下才順延。`
       : "5. 這是當日來回，所有 day 都填 1。",
     "6. 排不下的話在 note 裡直說（例如「最後一站會趕不上末班車」），不要硬塞。",
-    ...(f.lang === "zh-TW" ? [] : [`7. duration、howTo 與 note 用 ${LANG_NAME[f.lang]} 撰寫，台灣地名保留中文原文。`]),
+    ...(anchors.length
+      ? [
+          `7. 標了 ★ 的是已經訂好班次的火車，發車時間是固定的：${anchors.join("、")}。`,
+          "   這幾站的 time 一定要照原樣輸出，其他站繞著它們排。",
+          "   如果前面的行程結束得太早，寧可讓最後一站停留久一點，也不要把火車時間往前挪 ——",
+          "   那個時間沒有車。",
+        ]
+      : []),
+    ...(f.lang === "zh-TW" ? [] : [`8. duration 與 note 用 ${LANG_NAME[f.lang]} 撰寫，台灣地名保留中文原文。`]),
   ].join("\n");
 }

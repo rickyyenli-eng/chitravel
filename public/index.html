@@ -1359,7 +1359,9 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
         '<div class="rail"><span class="dot"></span></div>' +
         '<div class="card">' +
           '<div class="chead">' +
-            (s.time ? '<span class="ctime mono">' + esc(s.time) + '</span>' : '') +
+            // 移除的站不顯示時間：重排只調整還在行程裡的站，
+            // 留著舊時間會讓時間軸看起來往回跳
+            (s.time && !s.off ? '<span class="ctime mono">' + esc(s.time) + '</span>' : '') +
             '<span class="cname">' + esc(s.name) + '</span>' + cost +
           '</div>' +
           '<div class="tags" style="margin-top:6px">' +
@@ -1622,8 +1624,11 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
         form: state.form,
+        // howTo 與 detail 要一起送：後端靠裡面的車次判斷哪幾段是
+        // 「已訂班次的火車」，時間不能被挪動。送過去只用來判斷，不會被改寫回來。
         stops: live.map(function(s){
           return {kind:s.kind, name:s.name, time:s.time, duration:s.duration,
+                  howTo:s.howTo, detail:s.detail,
                   area:s.area, day:s.day, cost:s.cost, costUnit:s.costUnit};
         })
       })
@@ -1634,14 +1639,13 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
           state.replanNote = L().replanFail;
           return;
         }
+        // 重排只回時間類欄位。怎麼去的敘述留著使用者手上那份 ——
+        // 那裡面的路線、站數、出口與車次都是查證過的
         live.forEach(function(s, i){
           var pch = j.patch[i];
           s.time = pch.time || s.time;
           s.duration = pch.duration || s.duration;
-          if (pch.howTo) s.howTo = pch.howTo;
           s.day = pch.day || s.day;
-          // 重排時後端也會把站數改對，把說明一起帶回卡片上
-          if (pch.fixes && pch.fixes.length) s.fixes = pch.fixes;
         });
         state.edited = false;
         state.replanNote = j.note || "";

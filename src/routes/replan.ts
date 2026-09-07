@@ -1,7 +1,7 @@
 import { Hono, type Context } from "hono";
 import { config } from "../config.js";
 import { extractJson } from "../lib/json.js";
-import { fixStopCounts } from "../lib/metro.js";
+import { isRailAnchor } from "../lib/anchor.js";
 import { allow } from "../lib/rate-limit.js";
 import { ask, LlmError } from "../llm.js";
 import { REPLAN_SYSTEM, buildReplanPrompt } from "../prompt.js";
@@ -39,10 +39,13 @@ replanRoute.post("/replan", async (c) => {
   if (!parsed.success) return fail(c, 400, "bad_request", "行程資料看起來不完整。");
   const { form, stops } = parsed.data;
 
+  // 有班次的火車段時間是固定的，模型不能動，其他站要繞著它排
+  const anchored = stops.map((s) => ({ ...s, anchor: isRailAnchor(s) }));
+
   try {
     const res = await ask({
       system: REPLAN_SYSTEM,
-      prompt: buildReplanPrompt(form, stops),
+      prompt: buildReplanPrompt(form, anchored),
       model: config.plannerModel,
       maxTokens: 400 + stops.length * 180,
       prefill: "{",
@@ -54,18 +57,20 @@ replanRoute.post("/replan", async (c) => {
       return fail(c, 502, "invalid_json", "重排的結果對不上目前的站數，再按一次試試。");
     }
 
-    // 只接受時間類欄位。名稱、價格、備註一概沿用使用者手上那份 ——
-    // 重排就該只動時間，模型順手改掉別的欄位是最惱人的事
-    const patch = rows.map((r) => {
+    // 只接受時間類欄位。名稱、價格、備註、怎麼去一概沿用使用者手上那份。
+    //
+    // howTo 原本也收，是個錯誤：模型重排時會順手把
+    //   「板南線（BL）往頂埔方向，搭 5 站至國父紀念館站，4 號出口」
+    // 簡化成「搭捷運板南線至國父紀念館站」—— 方向、站數、出口全丟了，
+    // 而那正是這個 app 唯一有價值的東西。現在完全不收。
+    const patch = rows.map((r, i) => {
       const o = (r ?? {}) as Record<string, unknown>;
-      const howTo = typeof o.howTo === "string" ? o.howTo.slice(0, 400) : "";
-      // 重排也會重寫 howTo，站數一樣要按真實路網改對，不然改完又錯回去
-      const fixed = fixStopCounts(howTo, form.to, form.lang);
+      const orig = stops[i];
+      const locked = anchored[i]?.anchor === true;
       return {
-        time: String(o.time ?? "").slice(0, 10),
+        // 已訂班次的火車：發車時間不是行程安排，是既成事實
+        time: locked ? (orig?.time ?? "") : String(o.time ?? "").slice(0, 10),
         duration: String(o.duration ?? "").slice(0, 40),
-        howTo: fixed.text,
-        fixes: fixed.notes,
         day: Number(o.day) >= 1 ? Math.floor(Number(o.day)) : 1,
       };
     });
