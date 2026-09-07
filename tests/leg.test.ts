@@ -61,5 +61,26 @@ for (const t of sentences) eq(`自己產生的句子通過站數檢查：${t.sli
 
 eq("towardOf 反向", towardOf("TRTC:R", "中正紀念堂", "台北車站"), "淡水");
 
+// 非中文介面時站名寫成「譯名（中文原文）」，照樣要算得出站數與方向
+const bilingual = [
+  { mode: "walk", to: "MRT Taipei Main Station (捷運台北車站)", minutes: 8 },
+  { mode: "metro", line: "淡水信義線", from: "Taipei Main Station (台北車站)", to: "Chiang Kai-shek Memorial Hall (中正紀念堂)", exit: "5" },
+] as any;
+eq(
+  "英文站名夾中文也查得到（站數與方向不能消失）",
+  renderLegs(bilingual, "en", "台北").text,
+  "Walk 8 min to MRT Taipei Main Station (捷運台北車站), then take the 淡水信義線 toward 象山, 2 stops to 中正紀念堂, exit 5",
+);
+eq(
+  "省略起點後不留孤立的逗號或雙空白",
+  /(,\s{2,})|(，，)|(puis ,)/.test(renderLegs(bilingual, "fr", "台北").text),
+  false,
+);
+eq(
+  "算不出站數時也不留孤立逗號",
+  renderLegs([{ mode: "metro", line: "板南線", from: "台北101/世貿", to: "國父紀念館", exit: "4" }] as any, "zh-TW", "台北").text,
+  "從台北101/世貿站搭板南線，到國父紀念館站，4 號出口",
+);
+
 console.log(`\n${pass}/${total} 通過`);
 process.exit(pass === total ? 0 : 1);

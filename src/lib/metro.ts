@@ -541,6 +541,17 @@ export function stationOf(
   name: string,
   cities: string[],
 ): { display: string; lines: string[] } | undefined {
+  const direct = lookupStation(name, cities);
+  if (direct) return direct;
+  // 「Taipei Main Station (台北車站)」這種寫法，把中文挖出來再查一次
+  const zh = cjkOf(name);
+  return zh && zh !== name ? lookupStation(zh, cities) : undefined;
+}
+
+function lookupStation(
+  name: string,
+  cities: string[],
+): { display: string; lines: string[] } | undefined {
   const q = normKey(normStation(name));
   if (!q) return undefined;
   let best: { display: string; lines: string[] } | undefined;
@@ -561,7 +572,7 @@ export function stationOf(
  */
 export function lineOf(name: string, cities: string[], asName = false): string | undefined {
   if (asName) return DB.lines[name]?.name;
-  const q = normKey(name);
+  const q = normKey(cjkOf(name));
   if (!q) return undefined;
   for (const [key, l] of Object.entries(DB.lines)) {
     if (!cities.includes(l.city)) continue;
@@ -569,4 +580,17 @@ export function lineOf(name: string, cities: string[], asName = false): string |
     if (names.some((n) => normKey(n) === q || q.includes(normKey(n)))) return key;
   }
   return undefined;
+}
+
+/**
+ * 從「Taipei Main Station (台北車站)」裡把中文拿出來。
+ *
+ * 介面語言不是中文時，i18n 規則要求名稱寫成「譯名（中文原文）」，
+ * 於是 legs 裡的 from/to 長這樣。照字面查一定查不到 ——
+ * 線上實測的英文行程站數與方向整片消失，就是這個原因。
+ */
+export function cjkOf(name: string): string {
+  const runs = String(name ?? "").match(/[\u3400-\u9FFF]+/g);
+  if (!runs?.length) return String(name ?? "");
+  return runs.sort((a, b) => b.length - a.length)[0]!;
 }

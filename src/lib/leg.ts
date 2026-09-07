@@ -1,4 +1,4 @@
-import { citiesForPublic, hopCount, lineOf, normStation, routesOf, stationOf } from "./metro.js";
+import { cjkOf, citiesForPublic, hopCount, lineOf, normStation, routesOf, stationOf } from "./metro.js";
 import type { Leg } from "../types.js";
 import type { LangCode } from "../types.js";
 import { WARN } from "./warn-text.js";
@@ -31,6 +31,14 @@ export function towardOf(lineKey: string, from: string, to: string): string | un
 
 function joinNonEmpty(parts: Array<string | undefined>, sep = ""): string {
   return parts.filter((x) => x && x.trim()).join(sep);
+}
+
+/** 省略「從 X 站」之後開頭會留下逗號或空白，清掉 */
+function tidy(x: string): string {
+  return x
+    .replace(/^[\s,，、;；]+/, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 /** 「台北車站」已經有站字了，不要變成「台北車站站」 */
@@ -111,8 +119,8 @@ function metroText(leg: Leg, lang: LangCode, dest: string, issues: string[], sam
     fromName ? `從${zhStation(fromName)}` : "",
     lineName ? `搭${lineName}` : "搭捷運",
     toward ? `往${toward}方向` : "",
-    n ? `，${n} 站` : "，",
-    toName ? `到${zhStation(toName)}` : "",
+    n ? `，${n} 站` : "",
+    toName ? `${n ? "" : "，"}到${zhStation(toName)}` : "",
     exit ? `，${exit} 號出口` : "",
   ]);
 }
@@ -200,10 +208,10 @@ export function renderLegs(
   const parts: string[] = [];
   let prevTo = "";
   for (const leg of legs) {
-    const same = Boolean(leg.from) && normStation(leg.from) === normStation(prevTo);
-    if (leg.mode === "metro") parts.push(metroText(leg, lang, dest, issues, same));
-    else if (leg.mode === "rail") parts.push(railText(leg, lang, trains));
-    else parts.push(plainText(leg, lang));
+    const same = Boolean(leg.from) && normStation(cjkOf(leg.from)) === normStation(cjkOf(prevTo));
+    if (leg.mode === "metro") parts.push(tidy(metroText(leg, lang, dest, issues, same)));
+    else if (leg.mode === "rail") parts.push(tidy(railText(leg, lang, trains)));
+    else parts.push(tidy(plainText(leg, lang)));
     if (leg.to) prevTo = leg.to;
   }
   let text = "";
