@@ -546,6 +546,27 @@ TDX 的限制是每 IP 60 個並行連線、每秒 50 次請求，這個規模�
 跟 Tavily 同一個原則。故意填錯的金鑰也測過：token 取不到就印一行 log，
 座位欄位留空，行程完全不受影響。
 
+##### 一行 curl 看清楚
+
+憑證只有線上有，所以「行程裡沒出現有位」時分不清是 TDX 沒回、
+還是模型沒把它抄進輸出。加了 `GET /api/rail` 直接看注入的班表：
+
+```bash
+curl -s -G https://shunlu.onrender.com/api/rail \
+  --data-urlencode "mode=thsr" --data-urlencode "from=台北" \
+  --data-urlencode "to=台中"  --data-urlencode "date=2026-09-14"
+```
+
+```json
+{ "tdx": true, "ok": true,
+  "trains": [{ "no":"0813","depart":"09:11","arrive":"10:15",
+               "seats":{"standard":"O","business":"O"} }],
+  "fare": { "standard": 700, "nonReserved": 675 } }
+```
+
+`tdx` 是憑證有沒有設定，`seats` 有沒有出現就是 TDX 到底有沒有回。
+回的全是公開資料，沒有任何金鑰。
+
 ##### ⚠️ 這段沒有實測過
 
 `src/lib/tdx.ts` 是照 TDX 的 swagger 契約寫的（端點路徑、`AvailableSeats` 陣列、
