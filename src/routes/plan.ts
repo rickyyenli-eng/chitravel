@@ -4,7 +4,7 @@ import { config } from "../config.js";
 import { hashKey, TtlCache } from "../lib/cache.js";
 import { checkHours } from "../lib/hours.js";
 import { extractJson } from "../lib/json.js";
-import { checkTransit, fixStopCounts } from "../lib/metro.js";
+import { checkTransit, fixStopCounts, originOf } from "../lib/metro.js";
 import { allow } from "../lib/rate-limit.js";
 import { MOCK_TRIP_JSON } from "../lib/mock-trip.js";
 import { TripStreamParser } from "../lib/stream-parse.js";
@@ -320,7 +320,9 @@ function makeAuditor(form: PlanRequest): (s: Stop) => { stop: Stop; warnings: st
   const fresh = (list: string[]) => list.filter((w) => !seen.has(w) && (seen.add(w), true));
   return (s) => {
     // 先改對再檢查：站數改好了就不該再跳那條警告
-    const f = fixStopCounts(s.howTo, form.to, form.lang);
+    // 標題的起點站要一起帶進去當上下文：「東門站 → 北投站」的東門
+    // 不在 howTo 裡，少了它就配不成對
+    const f = fixStopCounts(s.howTo, form.to, form.lang, originOf(s.name));
     const stop = f.notes.length ? { ...s, howTo: f.text } : s;
     return { stop, warnings: fresh(auditStop(stop, form)), fixes: fresh(f.notes) };
   };

@@ -1,10 +1,10 @@
-import { fixStopCounts } from "../src/lib/metro.js";
+import { fixStopCounts, originOf } from "../src/lib/metro.js";
 
 /**
  * 站數修正。錯配比不修更危險 —— 把數字寫到別段去，使用者不會知道。
  * 這裡每一句都是線上真的出現過的寫法。
  */
-const cases: Array<[string, string, string, string]> = [
+const cases: Array<[string, string, string, string, string?]> = [
   [
     "台北",
     "回中正紀念堂站，轉淡水信義線（紅線）往象山方向，四站到台北 101/世貿站",
@@ -41,11 +41,32 @@ const cases: Array<[string, string, string, string]> = [
     "從台北車站步行 12 分鐘，或搭板南線兩站到西門站",
     "有「或」一律不動",
   ],
+  [
+    "台北",
+    "淡水信義線（R）往象山方向，搭 27 站到台北車站",
+    "淡水信義線（R）往象山方向，搭 18 站到台北車站",
+    "起點只寫在卡片標題裡，也要抓得到",
+    "淡水站 → 台北車站",
+  ],
+  [
+    "台北",
+    "板南線（BL）往頂埔方向，搭 1 站到忠孝復興站，轉文湖線（BR）往動物園方向，搭 1 站到大安站",
+    "板南線（BL）往頂埔方向，搭 2 站到忠孝復興站，轉文湖線（BR）往動物園方向，搭 1 站到大安站",
+    "標題起點只補第一段，後面照原本的配對",
+    "國父紀念館站 → 東門站",
+  ],
+  [
+    "高雄",
+    "搭環狀輕軌順時針方向，經夢時代、展覽館等站，約 14 站到愛河之心站",
+    "搭環狀輕軌順時針方向，經夢時代、展覽館等站，約 14 站到愛河之心站",
+    "環狀線兩個方向站數不同，一律不動",
+    "駁二大義站 → 愛河之心站",
+  ],
 ];
 
 let pass = 0;
-for (const [city, input, want, note] of cases) {
-  const got = fixStopCounts(input, city).text;
+for (const [city, input, want, note, title] of cases) {
+  const got = fixStopCounts(input, city, "zh-TW", originOf(title ?? "")).text;
   const ok = got === want;
   if (ok) pass++;
   console.log(`  ${ok ? "ok  " : "FAIL"} ${note}`);

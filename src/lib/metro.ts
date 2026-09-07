@@ -372,17 +372,31 @@ export function fixStopCounts(
   text: string,
   dest: string,
   lang: LangCode = "zh-TW",
+  /**
+   * 只當上下文、不會被改到的前綴。
+   *
+   * 卡片標題常寫「東門站 → 北投站」，而「怎麼去」只寫「搭 16 站到北投站」——
+   * 起點根本不在被檢查的字串裡，配不成對就整段放過。線上實測一趟台北行程
+   * 有三段站數錯（16→15、27→18、1→2）全部漏掉，就是這個原因。
+   */
+  context = "",
 ): { text: string; notes: string[] } {
-  const hits = scanStopCounts(text, dest).filter((h) => h.said !== h.real);
+  const prefix = context ? `${context}\n` : "";
+  const combined = prefix + text;
+  const hits = scanStopCounts(combined, dest).filter(
+    // 前綴只是上下文，落在前綴裡的數字不能動
+    (h) => h.said !== h.real && h.start >= prefix.length,
+  );
   if (!hits.length) return { text, notes: [] };
 
   const W = WARN[lang];
   const notes: string[] = [];
-  let out = text;
+  let out = combined;
   // 由後往前改，前面的座標才不會跑掉
   for (const h of [...hits].sort((x, y) => y.start - x.start)) {
     out = out.slice(0, h.start) + writeCount(h.real, h.arabic) + out.slice(h.end);
   }
+  out = out.slice(prefix.length);
   for (const h of hits) {
     notes.push(W.stopFixed(h.from, h.to, DB.lines[h.lineKey]?.name ?? h.lineKey, h.said, h.real));
   }
@@ -419,7 +433,24 @@ function adjacency(lineKey: string): Map<string, Set<string>> | undefined {
   return g;
 }
 
+/**
+ * 環狀線一律不判斷站數。
+ *
+ * 高雄環狀輕軌是真的一個圈（首尾相接）：駁二大義到愛河之心，順時針 13 站、
+ * 逆時針 25 站，兩個都對，看你往哪邊搭。BFS 只會給比較短的那個 ——
+ * 而句子寫的是「順時針方向」。報錯報錯了只是講錯一句話，
+ * **改**錯了是把錯的數字寫進行程裡，使用者不會知道。寧可不碰。
+ *
+ * 台北環狀線目前資料上首尾沒接起來（大坪林↔新北產業園區），還算得出來。
+ */
+function isLoop(lineKey: string): boolean {
+  const routes = DB.routes?.[lineKey];
+  if (!routes?.length) return false;
+  return routes.some((r) => r.length > 2 && r[0] === r[r.length - 1]);
+}
+
 export function hopCount(lineKey: string, from: string, to: string): number | undefined {
+  if (isLoop(lineKey)) return undefined;
   const g = adjacency(lineKey);
   if (!g) return undefined;
   const a = normStation(from), b = normStation(to);
@@ -441,4 +472,14 @@ export function hopCount(lineKey: string, from: string, to: string): number | un
     front = next;
   }
   return undefined;
+}
+
+/**
+ * 從「東門站 → 北投站」這種標題取出起點。
+ * 整個標題不能直接拿來當上下文：裡面的終點站會跟「怎麼去」裡的終點站
+ * 配成同一站，判斷式看到頭尾一樣就整段放過了。
+ */
+export function originOf(name: string): string {
+  const m = /^(.*?)\s*(?:→|->|➞|⇒|~|～)\s*.+$/u.exec(String(name || ""));
+  return (m ? m[1] : name) ?? "";
 }
