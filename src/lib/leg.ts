@@ -221,6 +221,18 @@ const JOIN_PLAIN: Record<LangCode, string> = { "zh-TW": "，", en: ", then ", fr
  * 把整段交通寫成一句話。回傳的 issues 是「模型填錯欄位」才有 ——
  * 站數與方向不會出現在 issues 裡，因為那兩個根本不是模型填的。
  */
+/**
+ * 模型會把機場捷運歸成 rail（線上實測），於是走了不算站數的分支。
+ * 判準很清楚：有車次的才是台鐵高鐵；沒有車次而路線名在捷運資料裡查得到的，
+ * 就是捷運。不靠模型分類正確，自己判一次。
+ */
+function realMode(leg: Leg): Leg["mode"] {
+  if (leg.mode === "rail" && !leg.trainNo && leg.line) {
+    if (lineOf(leg.line, allCities())) return "metro";
+  }
+  return leg.mode;
+}
+
 export function renderLegs(
   legs: Leg[],
   lang: LangCode,
@@ -232,8 +244,9 @@ export function renderLegs(
   let prevTo = "";
   for (const leg of legs) {
     const same = Boolean(leg.from) && normStation(cjkOf(leg.from)) === normStation(cjkOf(prevTo));
-    if (leg.mode === "metro") parts.push(tidy(metroText(leg, lang, dest, issues, same)));
-    else if (leg.mode === "rail") parts.push(tidy(railText(leg, lang, trains)));
+    const mode = realMode(leg);
+    if (mode === "metro") parts.push(tidy(metroText(leg, lang, dest, issues, same)));
+    else if (mode === "rail") parts.push(tidy(railText(leg, lang, trains)));
     else parts.push(tidy(plainText(leg, lang)));
     if (leg.to) prevTo = leg.to;
   }
@@ -242,7 +255,7 @@ export function renderLegs(
     const piece = parts[i];
     if (!piece) return;
     if (!text) { text = piece; return; }
-    const ride = leg.mode === "metro" || leg.mode === "rail";
+    const ride = realMode(leg) === "metro" || realMode(leg) === "rail";
     text += (ride ? JOIN_RIDE[lang] : JOIN_PLAIN[lang]) + piece;
   });
   return { text, issues: issues.slice(0, 3) };

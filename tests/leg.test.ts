@@ -95,5 +95,17 @@ eq(
   true,
 );
 
+// 模型會把機場捷運歸成 rail（線上實測），伺服器要自己判回 metro
+eq(
+  "沒有車次的 rail + 認得的捷運路線 → 當成 metro 算站數",
+  renderLegs([{ mode: "rail", line: "桃園機場捷運", from: "桃園機場第二航廈", to: "台北車站" }] as any, "zh-TW", "Taipei").text,
+  "從機場第二航廈站搭桃園機場捷運往台北車站方向，12 站到台北車站",
+);
+eq(
+  "真的台鐵高鐵（有車次）不受影響",
+  renderLegs([{ mode: "rail", line: "高鐵", trainNo: "0612", from: "台中高鐵站", to: "台北車站" }] as any, "zh-TW", "台北", TRAINS).text,
+  "於台中高鐵站搭高鐵 0612 車次至台北車站（09:00 發車→09:59 抵達）",
+);
+
 console.log(`\n${pass}/${total} 通過`);
 process.exit(pass === total ? 0 : 1);

@@ -98,7 +98,7 @@ export function buildPlanPrompt(f: PlanRequest, railBlock = ""): string {
     "10-b. 交通段（kind:transit）改填 legs，howTo 留空字串。legs 是一段一段的移動：",
     "     mode 只能是 metro / rail / walk / bus / taxi / other。",
     "     metro 填 line（路線中文名）、from、to、exit（出口編號，只填數字）；",
-    "     rail 填 line（高鐵／台鐵自強）、trainNo、from、to；",
+    "     rail 只給台鐵與高鐵（一定有 trainNo）；機場捷運、輕軌都算 metro；",
     "     walk 填 to 與 minutes。轉乘就多寫一段，from 接上一段的 to。",
     "     **不要填要搭幾站、不要寫往哪個方向、不要寫發車抵達時刻** ——",
     "     這三個由伺服器用真實路網與班表算出來，你算的會錯。",
