@@ -4,7 +4,7 @@ import { config } from "../config.js";
 import { hashKey, TtlCache } from "../lib/cache.js";
 import { checkHours } from "../lib/hours.js";
 import { extractJson } from "../lib/json.js";
-import { checkTransit } from "../lib/metro.js";
+import { checkStopCount, checkTransit } from "../lib/metro.js";
 import { allow } from "../lib/rate-limit.js";
 import { MOCK_TRIP_JSON } from "../lib/mock-trip.js";
 import { TripStreamParser } from "../lib/stream-parse.js";
@@ -122,8 +122,9 @@ planRoute.post("/plan/stream", async (c) => {
 
     try {
       if (cached) {
+        const auditCached = makeAuditor(form);
         push("meta", { title: cached.title, summary: cached.summary });
-        for (const stop of cached.stops) push("stop", { ...stop, warnings: auditStop(stop, form) });
+        for (const stop of cached.stops) push("stop", { ...stop, warnings: auditCached(stop) });
         for (const extra of cached.extras) push("extra", extra);
         push("done", { tips: cached.tips, cached: true, ms: Date.now() - started, verifying: 0 });
         const savedCandidates = verifyCache.get(key);
@@ -138,11 +139,15 @@ planRoute.post("/plan/stream", async (c) => {
 
       const stops: Stop[] = [];
       const extras: Extra[] = [];
+      const audit = makeAuditor(form);
+      let flagged = 0;
       const parser = new TripStreamParser({
         meta: (m) => push("meta", m),
         stop: (s) => {
           stops.push(s);
-          push("stop", { ...s, warnings: auditStop(s, form) });
+          const warnings = audit(s);
+          if (warnings.length) flagged++;
+          push("stop", { ...s, warnings });
         },
         extra: (x) => {
           extras.push(x);
@@ -194,7 +199,6 @@ planRoute.post("/plan/stream", async (c) => {
 
       if (trip.success && trip.data.stops.length > 0) {
         cache.set(key, trip.data);
-        const flagged = stops.filter((s) => auditStop(s, form).length > 0).length;
         push("done", {
           tips: trip.data.tips,
           cached: false,
@@ -301,16 +305,28 @@ function failFromError(c: Context, err: unknown) {
  * 「中正紀念堂在板南線上」（不在）、「華西街夜市 11:40」（夜市中午沒開）。
  * 這兩種錯在畫面上都看不出來，使用者會照著走過去才發現。
  */
+/**
+ * 一趟行程裡同一句警告只講一次。
+ *
+ * 高雄那趟裡「往西子灣方向」出現三段，就跳了三次一模一樣的改名提醒 ——
+ * 三次都是真的，但重複三次跟假警告一樣會讓人學會忽略。
+ */
+function makeAuditor(form: PlanRequest): (s: Stop) => string[] {
+  const seen = new Set<string>();
+  return (s) => auditStop(s, form).filter((w) => !seen.has(w) && (seen.add(w), true));
+}
+
 function auditStop(s: Stop, form: PlanRequest): string[] {
   const out: string[] = [];
-  if (s.kind === "transit") {
-    for (const i of checkTransit(`${s.name} ${s.howTo}`, form.to, form.lang)) out.push(i.text);
-  } else {
+  const text = s.kind === "transit" ? `${s.name} ${s.howTo}` : s.howTo;
+  if (s.kind !== "transit") {
     const h = checkHours(s.time, s.hours, s.duration, form.lang);
     if (h) out.push(h);
-    // 非交通站的 howTo 裡也常夾著捷運路線，一併檢查
-    for (const i of checkTransit(s.howTo, form.to, form.lang)) out.push(i.text);
   }
+  // 非交通站的 howTo 裡也常夾著捷運路線，一併檢查
+  for (const i of checkTransit(text, form.to, form.lang)) out.push(i.text);
+  // 「搭幾站」數錯了，旅客會照著月台跑馬燈數，數到就下車
+  for (const i of checkStopCount(text, form.to, form.lang)) out.push(i.text);
   return out.slice(0, 3);
 }
 

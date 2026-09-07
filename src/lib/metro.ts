@@ -5,7 +5,10 @@ import { WARN } from "./warn-text.js";
 type Db = {
   fetchedAt: string;
   lines: Record<string, { city: string; operator: string; name: string; en: string; aliases: string[] }>;
-  stations: Record<string, { city: string; lines: string[]; en: string; display: string }>;
+  stations: Record<
+    string,
+    { city: string; lines: string[]; seq?: Record<string, number>; en: string; display: string }
+  >;
   renamed: Record<string, string>;
 };
 const DB = metro as Db;
@@ -192,3 +195,104 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
 }
 
 export const metroFetchedAt = DB.fetchedAt;
+
+/* ─────────────────────────── 「搭幾站」 ─────────────────────────── */
+
+const CN_NUM: Record<string, number> = {
+  一: 1, 兩: 2, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10,
+};
+
+function toCount(raw: string): number {
+  const s = raw.trim();
+  if (/^\d+$/.test(s)) return Number(s);
+  if (CN_NUM[s]) return CN_NUM[s]!;
+  const m = /^十([一二三四五六七八九])$/.exec(s);
+  if (m) return 10 + (CN_NUM[m[1]!] ?? 0);
+  return 0;
+}
+
+/** 用等長空白蓋掉，位置才不會跑掉 —— 後面要靠先後順序判斷哪一站在前 */
+function blank(text: string, re: RegExp): string {
+  return text.replace(re, (m) => " ".repeat(m.length));
+}
+
+const SQUASH = /[\s　]/g;
+
+/**
+ * 檢查「搭 N 站到某站」的 N 對不對。
+ *
+ * 這是線上實測抓到的：台北一日行程四段捷運，三段的站數是錯的
+ * （「中正紀念堂往象山四站到台北101」實際是五站）。旅客會看著月台
+ * 跑馬燈數站，數到第四站下車就下錯了 —— 而畫面上完全看不出來。
+ *
+ * 一樣只在有把握時才報：句子裡要能明確定出「哪一條線、從哪站到哪站」，
+ * 定不出來就放過。
+ */
+export function checkStopCount(text: string, dest: string, lang: LangCode = "zh-TW"): TransitIssue[] {
+  const cities = citiesFor(dest);
+  if (!cities.length || !text) return [];
+  // 「A 或 B」兩種走法混在一句裡，站數對不到哪一段
+  if (/或|或是|\bor\b|\bou\b|または/i.test(text)) return [];
+
+  let masked = blank(text, /往[^，,。；;]{1,8}?方向/g);
+  const mentioned: string[] = [];
+  for (const [key, l] of Object.entries(DB.lines)) {
+    if (!cities.includes(l.city) || !l.name) continue;
+    const names = [l.name, ...(l.aliases || [])].filter(Boolean);
+    if (names.some((n) => masked.includes(n))) mentioned.push(key);
+    for (const n of names) masked = blank(masked, new RegExp(escape(n), "g"));
+  }
+
+  // 空白全部拿掉再比對：模型會寫「台北 101/世貿站」，資料裡是「台北101/世貿」
+  const body = masked.replace(SQUASH, "");
+
+  type Hit = { at: number; display: string; lines: string[]; seq: Record<string, number> };
+  const hits: Hit[] = [];
+  for (const [, st] of Object.entries(DB.stations)) {
+    if (!cities.includes(st.city) || st.display.length < 2) continue;
+    const d = st.display.replace(SQUASH, "");
+    for (let i = body.indexOf(d); i !== -1; i = body.indexOf(d, i + 1)) {
+      const rest = body.slice(i + d.length);
+      if (!/站$/.test(d) && !/^(?:捷運站|車站|站)/.test(rest)) continue;
+      hits.push({ at: i, display: st.display, lines: st.lines, seq: st.seq ?? {} });
+    }
+  }
+  if (hits.length < 2) return [];
+  hits.sort((a, b) => a.at - b.at);
+
+  const W = WARN[lang];
+  const issues: TransitIssue[] = [];
+  // 「第一站」是序數不是站數，別算進來
+  const re = /(?<!第)(\d{1,2}|十[一二三四五六七八九]|[一兩二三四五六七八九十])\s*站/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(body))) {
+    const n = toCount(m[1]!);
+    if (n < 1 || n > 40) continue;
+    const at = m.index;
+    const a = [...hits].reverse().find((h) => h.at + h.display.length <= at);
+    const b = hits.find((h) => h.at >= at + m![0].length);
+    if (!a || !b || a.display === b.display) continue;
+
+    // 要能唯一定出是哪一條線，定不出來就放過
+    let shared = a.lines.filter((l) => b.lines.includes(l));
+    if (mentioned.length) {
+      const narrowed = shared.filter((l) => mentioned.includes(l));
+      if (narrowed.length) shared = narrowed;
+    }
+    if (shared.length !== 1) continue;
+    const key = shared[0]!;
+    const sa = a.seq[key], sb = b.seq[key];
+    if (typeof sa !== "number" || typeof sb !== "number") continue;
+
+    const real = Math.abs(sa - sb);
+    if (real !== n) {
+      issues.push({ text: W.stopCount(a.display, b.display, DB.lines[key]?.name ?? key, n, real) });
+    }
+    if (issues.length >= 2) break;
+  }
+  return issues;
+}
+
+function escape(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

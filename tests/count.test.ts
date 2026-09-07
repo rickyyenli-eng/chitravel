@@ -1,0 +1,27 @@
+import { checkStopCount } from "../src/lib/metro.js";
+const cases: Array<[string, string, boolean, string]> = [
+  // 線上實測那四段
+  ["台北", "回台北車站捷運站，搭板南線往頂埔方向一站到西門站，轉松山新店線（綠線）往新店方向一站到中正紀念堂站，5 號出口", true, "西門→中正紀念堂 其實 2 站"],
+  ["台北", "回中正紀念堂站，轉淡水信義線（紅線）往象山方向，四站到台北 101/世貿站，4 號出口", true, "其實 5 站"],
+  ["台北", "從捷運台北 101/世貿站搭淡水信義線往淡水方向，四站到台北車站", true, "其實 7 站"],
+  ["台北", "於台北車站搭板南線往頂埔方向一站到西門站", false, "1 站，對的"],
+  // 對的句子不能亂報
+  ["台北", "從龍山寺站搭板南線往南港展覽館方向，2 站到台北車站", false, "龍山寺10→台北車站12 是 2 站"],
+  ["台北", "中正紀念堂站搭淡水信義線往淡水方向，2 站到台北車站", false, "R7→R9 是 2 站"],
+  ["高雄", "美麗島站搭紅線往小港方向，一站到中央公園站", false, ""],
+  // 定不出來就放過
+  ["台北", "搭捷運三站就到了", false, "沒有站名"],
+  ["台北", "這是本行程第一站，台北車站", false, "第一站是序數"],
+  ["台北", "從台北車站步行 12 分鐘，或搭板南線兩站到西門站", false, "有「或」"],
+  ["台北", "在赤峰街走走，大概 3 站的距離", false, "認不出站名"],
+];
+let pass = 0;
+for (const [city, text, want, note] of cases) {
+  const r = checkStopCount(text, city);
+  const got = r.length > 0;
+  const ok = got === want;
+  if (ok) pass++;
+  console.log(`  ${ok ? "ok  " : "FAIL"} ${got ? "✗" : "✓"} ${text.slice(0, 46)}${note ? `   〔${note}〕` : ""}`);
+  for (const i of r) console.log(`          → ${i.text}`);
+}
+console.log(`\n${pass}/${cases.length} 通過`);

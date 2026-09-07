@@ -13,6 +13,7 @@ type T = {
   renamed: (old: string, now: string) => string;
   outsideHours: (time: string, hours: string) => string;
   pastClosing: (time: string, mins: string, close: string) => string;
+  stopCount: (a: string, b: string, line: string, said: number, real: number) => string;
 };
 
 export const WARN: Record<LangCode, T> = {
@@ -22,6 +23,7 @@ export const WARN: Record<LangCode, T> = {
     renamed: (o, n) => `${o}站已改名為「${n}站」，現場招牌是新名字`,
     outsideHours: (t, h) => `排在 ${t}，但營業時間是 ${h}`,
     pastClosing: (t, m, c) => `${t} 進場停留 ${m} 分鐘，會超過 ${c} 的打烊時間`,
+    stopCount: (a, b, l, said, real) => `${a}到${b}（${l}）是 ${real} 站，不是 ${said} 站`,
   },
   en: {
     notOnLine: (s, l, r) => `${s} is not on the ${l} (it's on: ${r})`,
@@ -29,6 +31,7 @@ export const WARN: Record<LangCode, T> = {
     renamed: (o, n) => `${o} has been renamed “${n}” — that's what the signage says now`,
     outsideHours: (t, h) => `Scheduled for ${t}, but it opens ${h}`,
     pastClosing: (t, m, c) => `Arriving ${t} for ${m} min runs past the ${c} closing time`,
+    stopCount: (a, b, l, said, real) => `${a} to ${b} on the ${l} is ${real} stops, not ${said}`,
   },
   fr: {
     notOnLine: (s, l, r) => `${s} n'est pas sur la ${l} (elle est sur : ${r})`,
@@ -36,6 +39,7 @@ export const WARN: Record<LangCode, T> = {
     renamed: (o, n) => `${o} a été renommée « ${n} » — c'est le nom affiché sur place`,
     outsideHours: (t, h) => `Prévu à ${t}, mais les horaires sont ${h}`,
     pastClosing: (t, m, c) => `Arrivée à ${t} pour ${m} min : dépasse la fermeture de ${c}`,
+    stopCount: (a, b, l, said, real) => `${a} → ${b} sur la ${l} fait ${real} stations, pas ${said}`,
   },
   ja: {
     notOnLine: (s, l, r) => `${s}駅は${l}にありません（実際は：${r}）`,
@@ -43,5 +47,6 @@ export const WARN: Record<LangCode, T> = {
     renamed: (o, n) => `${o}駅は「${n}駅」に改称されました。現地の案内は新しい名前です`,
     outsideHours: (t, h) => `${t} に予定されていますが、営業時間は ${h} です`,
     pastClosing: (t, m, c) => `${t} から ${m} 分の滞在は ${c} の閉店時刻を過ぎます`,
+    stopCount: (a, b, l, said, real) => `${a}から${b}（${l}）は ${real} 駅で、${said} 駅ではありません`,
   },
 };

@@ -66,7 +66,10 @@ export function normStation(name: string): string {
 async function main() {
   const lines: Record<string, { city: string; operator: string; name: string; en: string; aliases: string[] }> = {};
   // key 用「城市|站名」：台北和台中都有市政府站，合併會讓驗證器把兩地的路線混在一起
-  const stations: Record<string, { city: string; lines: string[]; en: string; display: string }> = {};
+  const stations: Record<
+    string,
+    { city: string; lines: string[]; seq: Record<string, number>; en: string; display: string }
+  > = {};
 
   for (const op of OPERATORS) {
     const res = await fetch(`${BASE}/StationOfLine/${op.id}?%24format=JSON`);
@@ -101,9 +104,11 @@ async function main() {
         if (!zh) continue;
         const key = `${op.city}|${normStation(zh)}`;
         if (!stations[key]) {
-          stations[key] = { city: op.city, lines: [], en: st.StationName?.En ?? "", display: zh };
+          stations[key] = { city: op.city, lines: [], seq: {}, en: st.StationName?.En ?? "", display: zh };
         }
         if (!stations[key].lines.includes(lineKey)) stations[key].lines.push(lineKey);
+        // 站序：用來驗「搭幾站」。同一站在不同線上有不同序號，所以按線存。
+        if (typeof st.Sequence === "number") stations[key].seq[lineKey] = st.Sequence;
         n++;
       }
     }
