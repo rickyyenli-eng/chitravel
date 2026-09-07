@@ -436,7 +436,7 @@ export async function railPromptBlock(f: {
 export function fixTrainTimes(
   text: string,
   index: TrainIndex,
-): { text: string; notes: string[] } {
+): { text: string; notes: string[]; depart?: string; arrive?: string } {
   if (!text || !Object.keys(index).length) return { text, notes: [] };
 
   // 車次號碼要跟「車次／班次／列車」這類字連在一起，才不會把時刻或票價當成車次
@@ -471,5 +471,7 @@ export function fixTrainTimes(
   swap("發車", real.depart);
   swap("抵達", real.arrive);
 
-  return { text: out, notes: notes.slice(0, 2) };
+  // 卡片上的時間就是發車時間，一起回去讓呼叫端對齊 ——
+  // 不然會出現「卡片寫 17:01、內文寫 16:01 發車」這種自相矛盾
+  return { text: out, notes: notes.slice(0, 2), depart: real.depart, arrive: real.arrive };
 }

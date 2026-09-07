@@ -3,6 +3,7 @@ import { streamSSE } from "hono/streaming";
 import { config } from "../config.js";
 import { hashKey, TtlCache } from "../lib/cache.js";
 import { checkHours } from "../lib/hours.js";
+import { WARN } from "../lib/warn-text.js";
 import { extractJson } from "../lib/json.js";
 import { checkTransit, fixStopCounts, originOf } from "../lib/metro.js";
 import { allow } from "../lib/rate-limit.js";
@@ -325,6 +326,7 @@ function makeAuditor(
 ): (s: Stop) => { stop: Stop; warnings: string[]; fixes: string[] } {
   const seen = new Set<string>();
   const fresh = (list: string[]) => list.filter((w) => !seen.has(w) && (seen.add(w), true));
+  let prev: Stop | undefined;
   return (s) => {
     // 先改對再檢查：站數改好了就不該再跳那條警告
     // 標題的起點站要一起帶進去當上下文：「東門站 → 北投站」的東門
@@ -334,13 +336,35 @@ function makeAuditor(
     const notes = [...f.notes];
 
     // 車次的發車與抵達時刻也照真實班表改對 —— 模型會抄對車次卻自己算錯抵達
-    const t = fixTrainTimes(howTo, trains());
-    howTo = t.text;
-    notes.push(...t.notes);
+    const t = fixTrainTimes(`${s.name}\n${howTo}`, trains());
+    if (t.notes.length) {
+      const nl = t.text.indexOf("\n");
+      howTo = t.text.slice(nl + 1);
+      notes.push(...t.notes);
+    }
 
-    const stop = notes.length ? { ...s, howTo } : s;
-    return { stop, warnings: fresh(auditStop(stop, form)), fixes: fresh(notes) };
+    // 卡片上的時間就是發車時間，跟著改 —— 不然會出現
+    // 「卡片 17:01、內文 16:01 發車」這種自相矛盾
+    const time = t.depart && t.notes.length ? t.depart : s.time;
+    const name = t.notes.length ? t.text.slice(0, Math.max(0, t.text.indexOf("\n"))) : s.name;
+
+    const stop = notes.length ? { ...s, name, howTo, time } : s;
+    const warnings = auditStop(stop, form);
+
+    // 改對之後才看得出來趕不趕得上：上一站排在發車之後就是搭不到
+    if (t.depart && prev?.time && toMin(prev.time) > toMin(t.depart)) {
+      const no = /(?:車次|班次)\s*(\d{1,4})|(\d{1,4})\s*(?:車次|班次)/.exec(stop.name + stop.howTo);
+      warnings.unshift(WARN[form.lang].missTrain(no?.[1] ?? no?.[2] ?? "", t.depart, prev.time));
+    }
+    prev = stop;
+
+    return { stop, warnings: fresh(warnings), fixes: fresh(notes) };
   };
+}
+
+function toMin(hhmm: string): number {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm).trim());
+  return m ? Number(m[1]) * 60 + Number(m[2]) : -1;
 }
 
 function auditStop(s: Stop, form: PlanRequest): string[] {
