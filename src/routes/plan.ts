@@ -127,6 +127,10 @@ planRoute.post("/plan/stream", async (c) => {
 
     try {
       if (cached) {
+        // 快取的行程一樣要有班表：不然同一份行程從快取回來時
+        // 「於台北車站搭高鐵 0145 車次」後面的發車時刻會整個消失。
+        // 班表本身也有快取，這裡通常是幾百毫秒。
+        trainIndex = (await railPromptBlock(form)).index;
         const auditCached = makeAuditor(form, () => trainIndex);
         push("meta", { title: cached.title, summary: cached.summary });
         for (const stop of cached.stops) {
