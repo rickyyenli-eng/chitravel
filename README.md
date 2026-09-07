@@ -489,7 +489,7 @@ rail   18  站名解析與日期（離線）
 | 台鐵 時刻表 | `v3/Rail/TRA/DailyTrainTimetable/OD/{o}/to/{d}/{date}` | 當天起，約 60 天 |
 | 高鐵 票價 | `v2/Rail/THSR/ODFare/{o}/to/{d}` | 一直都有 |
 | 台鐵 票價 | `v2/Rail/TRA/ODFare/{o}/to/{d}` | 一直都有 |
-| **剩餘座位** | — | **✗ PTX 沒有這個端點** |
+| **剩餘座位** | — | **✗ PTX 沒有；TDX 高鐵有但要憑證，台鐵沒有** |
 
 剩餘座位這件事要講清楚：`AvailableSeatStatus` 在 PTX 回 404，TDX 有但要憑證，
 而且台鐵那邊本來就沒有這種資料。**所以「還有沒有票」目前做不到**，
@@ -497,6 +497,63 @@ rail   18  站名解析與日期（離線）
 
 高鐵沒有 OD 端點，只能抓整天（156 班、263KB）自己過濾；快取 6 小時之後
 第二次查是 174ms。台鐵有 OD 端點，直接查。
+
+#### 剩餘座位：唯一需要憑證的東西
+
+「還有沒有票」是需求清單裡最後一項，做不到的原因很具體：
+
+| | 剩餘座位 |
+|---|---|
+| PTX（不需憑證） | ✗ `AvailableSeatStatus` 實測回 404，沒有這個端點 |
+| TDX 高鐵 | ✓ 有，但要憑證 |
+| TDX 台鐵 | ✗ **根本沒有這種資料**，官方文件明講 |
+
+所以這件事**永遠只有高鐵做得到**。台鐵那半不是我沒做，是不存在。
+
+拿到的也不是數字，是三個狀態碼：
+
+```
+O 有位   L 剩少量   X 已售完
+```
+
+更新頻率（TDX 官方）：當日每 10 分鐘；D+1～D+27 每天 10、16、22 時。
+超過 27 天就別問了，所以快取設 8 分鐘對兩種情況都夠新。
+
+##### 申請步驟
+
+1. 到 <https://tdx.transportdata.tw> 註冊會員，收信驗證。
+2. 登入後進「會員專區 → API 金鑰」，取得 **Client ID** 與 **Client Secret**
+   （一個帳號最多可以有三組）。
+3. 填進 `.env`：
+
+   ```
+   TDX_CLIENT_ID=...
+   TDX_CLIENT_SECRET=...
+   ```
+
+4. Render 上到 Environment 加同樣兩個變數，然後 Manual Deploy。
+5. `curl .../healthz` 看 `"seats": true` 就是接上了。
+
+驗證走 OIDC client credentials：POST 到
+`https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token`，
+拿到的 JWT 有效 86400 秒（24 小時），之後每個請求帶
+`Authorization: Bearer <token>`。程式提早一小時換 token，免得卡在邊界上。
+TDX 的限制是每 IP 60 個並行連線、每秒 50 次請求，這個規模碰不到。
+
+##### 沒憑證也不會壞
+
+`tdxEnabled()` 是假的時候整個模組靜靜跳過，班次與票價照樣從 PTX 來 ——
+跟 Tavily 同一個原則。故意填錯的金鑰也測過：token 取不到就印一行 log，
+座位欄位留空，行程完全不受影響。
+
+##### ⚠️ 這段沒有實測過
+
+`src/lib/tdx.ts` 是照 TDX 的 swagger 契約寫的（端點路徑、`AvailableSeats` 陣列、
+`StandardSeatStatus` / `BusinessSeatStatus` 欄位都從官方 swagger 對過），
+但**我沒有憑證，沒辦法對真實回應驗一次**。已驗到的只有：認證端點確實存在
+（假金鑰回 400 而不是連不上）、沒憑證與錯憑證兩條路都安靜降級。
+
+第一次拿到金鑰跑起來時，請先看一眼真實回應再相信它。
 
 #### 三個踩到的坑
 

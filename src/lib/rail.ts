@@ -1,5 +1,6 @@
 import rail from "../data/rail.json" with { type: "json" };
 import { TtlCache } from "./cache.js";
+import { seatStatus, tdxEnabled, type Seats } from "./tdx.js";
 
 /**
  * 台鐵與高鐵的真實時刻表。資料來自 PTX（TDX 的前身，不需要憑證）。
@@ -25,6 +26,8 @@ export type RailMode = "thsr" | "tra";
 
 export type Train = {
   no: string;
+  /** 高鐵才有，且要設定 TDX 憑證：O 有位 / L 剩少量 / X 售完 */
+  seats?: Seats;
   /** 台鐵才有：自強、莒光、區間 */
   type?: string;
   depart: string;
@@ -286,7 +289,18 @@ export async function findTrains(opts: {
   trains.sort((x, y) => toMin(x.depart) - toMin(y.depart));
 
   const fare = opts.mode === "thsr" ? await thsrFare(from.id, to.id) : await traFare(from.id, to.id);
-  return { ok: true, mode: opts.mode, from, to, date: opts.date, trains: trains.slice(0, limit), ...(fare ? { fare } : {}) };
+  const picked = trains.slice(0, limit);
+
+  // 剩餘座位只有高鐵有，而且要 TDX 憑證。沒有就整段跳過，不影響班次與票價。
+  if (opts.mode === "thsr" && tdxEnabled()) {
+    const seats = await seatStatus(from.id, to.id, opts.date);
+    for (const t of picked) {
+      const s = seats[t.no];
+      if (s) t.seats = s;
+    }
+  }
+
+  return { ok: true, mode: opts.mode, from, to, date: opts.date, trains: picked, ...(fare ? { fare } : {}) };
 }
 
 export const railFetchedAt = DB.fetchedAt;
@@ -310,10 +324,15 @@ function addDays(date: string, n: number): string {
   return t.toISOString().slice(0, 10);
 }
 
+const SEAT_TEXT: Record<string, string> = { O: "有位", L: "剩少量", X: "已售完" };
+
 function line(mode: RailMode, r: TrainLookup, label: string): string[] {
   if (!r.ok) return [];
   const trains = r.trains
-    .map((t) => `${t.type ? t.type : ""}${t.no} ${t.depart}→${t.arrive}`)
+    .map((t) => {
+      const seat = t.seats?.standard ? ` ${SEAT_TEXT[t.seats.standard]}` : "";
+      return `${t.type ? t.type : ""}${t.no} ${t.depart}→${t.arrive}${seat}`;
+    })
     .join("、");
   const out = [`${label}（${r.from.zh}→${r.to.zh}）：${trains}`];
   const f = fareText(mode, r.fare);

@@ -16,6 +16,12 @@ export const config = {
   tavilyKey: process.env.TAVILY_API_KEY ?? "",
   /** Google Maps 金鑰：地點自動完成與定位反查。沒填就退回純文字輸入 */
   googleKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
+  /**
+   * TDX 憑證：只用來查高鐵對號座剩餘座位（PTX 沒有這個端點）。
+   * 沒填就不顯示座位狀態，其他一切照常。台鐵沒有這種資料，填了也查不到。
+   */
+  tdxClientId: process.env.TDX_CLIENT_ID ?? "",
+  tdxClientSecret: process.env.TDX_CLIENT_SECRET ?? "",
   plannerModel: process.env.PLANNER_MODEL ?? "claude-sonnet-4-5",
   extractModel: process.env.EXTRACT_MODEL ?? "claude-haiku-4-5",
   /** MOCK_PLAN=1：用假資料走完整條串流，不呼叫模型、不花錢 */
