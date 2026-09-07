@@ -5,10 +5,9 @@ import { WARN } from "./warn-text.js";
 type Db = {
   fetchedAt: string;
   lines: Record<string, { city: string; operator: string; name: string; en: string; aliases: string[] }>;
-  stations: Record<
-    string,
-    { city: string; lines: string[]; seq?: Record<string, number>; en: string; display: string }
-  >;
+  stations: Record<string, { city: string; lines: string[]; en: string; display: string }>;
+  /** 每條線的實際營運路線（含支線），順序即相鄰關係 */
+  routes: Record<string, string[][]>;
   renamed: Record<string, string>;
 };
 const DB = metro as Db;
@@ -218,17 +217,42 @@ function blank(text: string, re: RegExp): string {
 
 const SQUASH = /[\s　]/g;
 
+/** 一處站數宣稱，座標是「原文」的，才splice 得回去 */
+export type CountHit = {
+  start: number;
+  end: number;
+  said: number;
+  real: number;
+  from: string;
+  to: string;
+  lineKey: string;
+  arabic: boolean;
+};
+
+/** 把空白拿掉，同時記住每個字在原文的位置 */
+function squashWithMap(masked: string): { body: string; map: number[] } {
+  let body = "";
+  const map: number[] = [];
+  for (let i = 0; i < masked.length; i++) {
+    const c = masked[i]!;
+    if (/[\s　]/.test(c)) continue;
+    body += c;
+    map.push(i);
+  }
+  return { body, map };
+}
+
 /**
- * 檢查「搭 N 站到某站」的 N 對不對。
+ * 找出句子裡所有「搭 N 站」的宣稱，並算出真正是幾站。
  *
  * 這是線上實測抓到的：台北一日行程四段捷運，三段的站數是錯的
  * （「中正紀念堂往象山四站到台北101」實際是五站）。旅客會看著月台
  * 跑馬燈數站，數到第四站下車就下錯了 —— 而畫面上完全看不出來。
  *
- * 一樣只在有把握時才報：句子裡要能明確定出「哪一條線、從哪站到哪站」，
- * 定不出來就放過。
+ * 只在有把握時才判斷：句子裡要能明確定出「哪一條線、從哪站到哪站」，
+ * 而且兩站都在該線的路網圖上，定不出來就放過。
  */
-export function checkStopCount(text: string, dest: string, lang: LangCode = "zh-TW"): TransitIssue[] {
+export function scanStopCounts(text: string, dest: string): CountHit[] {
   const cities = citiesFor(dest);
   if (!cities.length || !text) return [];
   // 「A 或 B」兩種走法混在一句裡，站數對不到哪一段
@@ -244,9 +268,9 @@ export function checkStopCount(text: string, dest: string, lang: LangCode = "zh-
   }
 
   // 空白全部拿掉再比對：模型會寫「台北 101/世貿站」，資料裡是「台北101/世貿」
-  const body = masked.replace(SQUASH, "");
+  const { body, map } = squashWithMap(masked);
 
-  type Hit = { at: number; display: string; lines: string[]; seq: Record<string, number> };
+  type Hit = { at: number; display: string; lines: string[] };
   const hits: Hit[] = [];
   for (const [, st] of Object.entries(DB.stations)) {
     if (!cities.includes(st.city) || st.display.length < 2) continue;
@@ -254,23 +278,40 @@ export function checkStopCount(text: string, dest: string, lang: LangCode = "zh-
     for (let i = body.indexOf(d); i !== -1; i = body.indexOf(d, i + 1)) {
       const rest = body.slice(i + d.length);
       if (!/站$/.test(d) && !/^(?:捷運站|車站|站)/.test(rest)) continue;
-      hits.push({ at: i, display: st.display, lines: st.lines, seq: st.seq ?? {} });
+      hits.push({ at: i, display: st.display, lines: st.lines });
     }
   }
   if (hits.length < 2) return [];
   hits.sort((a, b) => a.at - b.at);
 
-  const W = WARN[lang];
-  const issues: TransitIssue[] = [];
+  const out: CountHit[] = [];
   // 「第一站」是序數不是站數，別算進來
-  const re = /(?<!第)(\d{1,2}|十[一二三四五六七八九]|[一兩二三四五六七八九十])\s*站/g;
+  const re = /(?<!第)(\d{1,2}|十[一二三四五六七八九]|[一兩二三四五六七八九十])站/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(body))) {
-    const n = toCount(m[1]!);
-    if (n < 1 || n > 40) continue;
+    const said = toCount(m[1]!);
+    if (said < 1 || said > 40) continue;
     const at = m.index;
-    const a = [...hits].reverse().find((h) => h.at + h.display.length <= at);
-    const b = hits.find((h) => h.at >= at + m![0].length);
+    const before = [...hits]
+      .reverse()
+      .filter((h) => h.at + h.display.replace(SQUASH, "").length <= at);
+    const prev = before[0];
+
+    // 兩種寫法，配對方式相反：
+    //   「搭 N 站到 B 站」        → 前一個站是起點，後一個站是終點
+    //   「至 B 站（N 站）」       → 括號是註解在 B 上，起點是再前面那一站
+    // 沒分清楚會把數字改到別段去 —— 實測就發生過：
+    //   「至忠孝新生站（1 站），轉中和新蘆線至大橋頭站（5 站）」
+    // 那個 1 講的是台北車站→忠孝新生，卻被當成忠孝新生→大橋頭而改成 5。
+    // 站名與括號之間還隔著一個「站」字：「忠孝新生站（1 站）」
+    const gap =
+      prev === undefined
+        ? ""
+        : body.slice(prev.at + prev.display.replace(SQUASH, "").length, at);
+    const paren = prev !== undefined && /^(?:捷運站|車站|站)?[（(]$/.test(gap);
+
+    const a = paren ? before[1] : prev;
+    const b = paren ? prev : hits.find((h) => h.at >= at + m![0].length);
     if (!a || !b || a.display === b.display) continue;
 
     // 要能唯一定出是哪一條線，定不出來就放過
@@ -281,18 +322,123 @@ export function checkStopCount(text: string, dest: string, lang: LangCode = "zh-
     }
     if (shared.length !== 1) continue;
     const key = shared[0]!;
-    const sa = a.seq[key], sb = b.seq[key];
-    if (typeof sa !== "number" || typeof sb !== "number") continue;
+    const real = hopCount(key, a.display, b.display);
+    if (real === undefined || real < 1) continue;
 
-    const real = Math.abs(sa - sb);
-    if (real !== n) {
-      issues.push({ text: W.stopCount(a.display, b.display, DB.lines[key]?.name ?? key, n, real) });
-    }
-    if (issues.length >= 2) break;
+    const s0 = map[at], s1 = map[at + m[1]!.length - 1];
+    if (s0 === undefined || s1 === undefined) continue;
+    out.push({
+      start: s0,
+      end: s1 + 1,
+      said,
+      real,
+      from: a.display,
+      to: b.display,
+      lineKey: key,
+      arabic: /^\d+$/.test(m[1]!),
+    });
+    if (out.length >= 6) break;
   }
-  return issues;
+  return out;
 }
 
-function escape(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export function checkStopCount(text: string, dest: string, lang: LangCode = "zh-TW"): TransitIssue[] {
+  const W = WARN[lang];
+  return scanStopCounts(text, dest)
+    .filter((h) => h.said !== h.real)
+    .slice(0, 2)
+    .map((h) => ({
+      text: W.stopCount(h.from, h.to, DB.lines[h.lineKey]?.name ?? h.lineKey, h.said, h.real),
+    }));
+}
+
+const NUM_CN = ["", "一", "兩", "三", "四", "五", "六", "七", "八", "九", "十"];
+
+function writeCount(n: number, arabic: boolean): string {
+  if (arabic || n > 10) return String(n);
+  return NUM_CN[n] ?? String(n);
+}
+
+/**
+ * 站數不只是報錯，直接改對。
+ *
+ * 加了 prompt 規則之後錯誤率從 50% 掉到 27%，但壓不到零 —— 因為數站是
+ * 「數數」不是「回想」，模型本來就不擅長。既然有把握說「你寫五站是錯的」，
+ * 就有把握把它改成四站。警告只告訴使用者這裡有問題，修正直接給他答案。
+ *
+ * 改完會回報改了什麼，讓卡片上寫清楚，而不是偷偷動模型寫的字。
+ */
+export function fixStopCounts(
+  text: string,
+  dest: string,
+  lang: LangCode = "zh-TW",
+): { text: string; notes: string[] } {
+  const hits = scanStopCounts(text, dest).filter((h) => h.said !== h.real);
+  if (!hits.length) return { text, notes: [] };
+
+  const W = WARN[lang];
+  const notes: string[] = [];
+  let out = text;
+  // 由後往前改，前面的座標才不會跑掉
+  for (const h of [...hits].sort((x, y) => y.start - x.start)) {
+    out = out.slice(0, h.start) + writeCount(h.real, h.arabic) + out.slice(h.end);
+  }
+  for (const h of hits) {
+    notes.push(W.stopFixed(h.from, h.to, DB.lines[h.lineKey]?.name ?? h.lineKey, h.said, h.real));
+  }
+  return { text: out, notes: notes.slice(0, 3) };
+}
+
+/**
+ * 一條線上兩站之間隔幾站，走真正的路網圖。
+ *
+ * 不能用序號相減：`StationOfLine` 把支線接在主線後面，新北投的序號是 28、
+ * 北投是 21，相減得 7 —— 實際上它們相鄰。`StationOfRoute` 分得出支線
+ * （R-3 就是北投↔新北投兩站），把每條營運路線的相鄰關係併起來再走 BFS 才對。
+ */
+const adjCache = new Map<string, Map<string, Set<string>>>();
+
+function adjacency(lineKey: string): Map<string, Set<string>> | undefined {
+  const hit = adjCache.get(lineKey);
+  if (hit) return hit;
+  const routes = DB.routes?.[lineKey];
+  if (!routes?.length) return undefined;
+  const g = new Map<string, Set<string>>();
+  const link = (x: string, y: string) => {
+    if (!g.has(x)) g.set(x, new Set());
+    g.get(x)!.add(y);
+  };
+  for (const r of routes) {
+    for (let i = 1; i < r.length; i++) {
+      const a = r[i - 1]!, b = r[i]!;
+      link(a, b);
+      link(b, a);
+    }
+  }
+  adjCache.set(lineKey, g);
+  return g;
+}
+
+export function hopCount(lineKey: string, from: string, to: string): number | undefined {
+  const g = adjacency(lineKey);
+  if (!g) return undefined;
+  const a = normStation(from), b = normStation(to);
+  if (a === b) return 0;
+  if (!g.has(a) || !g.has(b)) return undefined;
+  const seen = new Set([a]);
+  let front = [a], d = 0;
+  while (front.length && d < 60) {
+    d++;
+    const next: string[] = [];
+    for (const cur of front) {
+      for (const nb of g.get(cur) ?? []) {
+        if (seen.has(nb)) continue;
+        if (nb === b) return d;
+        seen.add(nb);
+        next.push(nb);
+      }
+    }
+    front = next;
+  }
+  return undefined;
 }

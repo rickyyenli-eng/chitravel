@@ -1,6 +1,7 @@
 import { Hono, type Context } from "hono";
 import { config } from "../config.js";
 import { extractJson } from "../lib/json.js";
+import { fixStopCounts } from "../lib/metro.js";
 import { allow } from "../lib/rate-limit.js";
 import { ask, LlmError } from "../llm.js";
 import { REPLAN_SYSTEM, buildReplanPrompt } from "../prompt.js";
@@ -21,6 +22,7 @@ const ReplanRequestSchema = z.object({
   form: PlanRequestSchema,
   stops: z.array(StopSchema).min(1).max(40),
 });
+
 
 export const replanRoute = new Hono();
 
@@ -56,10 +58,14 @@ replanRoute.post("/replan", async (c) => {
     // 重排就該只動時間，模型順手改掉別的欄位是最惱人的事
     const patch = rows.map((r) => {
       const o = (r ?? {}) as Record<string, unknown>;
+      const howTo = typeof o.howTo === "string" ? o.howTo.slice(0, 400) : "";
+      // 重排也會重寫 howTo，站數一樣要按真實路網改對，不然改完又錯回去
+      const fixed = fixStopCounts(howTo, form.to, form.lang);
       return {
         time: String(o.time ?? "").slice(0, 10),
         duration: String(o.duration ?? "").slice(0, 40),
-        howTo: typeof o.howTo === "string" ? o.howTo.slice(0, 400) : "",
+        howTo: fixed.text,
+        fixes: fixed.notes,
         day: Number(o.day) >= 1 ? Math.floor(Number(o.day)) : 1,
       };
     });

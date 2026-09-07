@@ -54,6 +54,13 @@ type RawLine = {
   Stations?: Array<{ StationID?: string; StationName?: { Zh_tw?: string; En?: string }; Sequence?: number }>;
 };
 
+type RawRoute = {
+  LineNo?: string;
+  LineID?: string;
+  RouteID?: string;
+  Stations?: Array<{ StationName?: { Zh_tw?: string } }>;
+};
+
 /** 站名比對用：去掉「站」「捷運」與空白，這樣「龍山寺站」「龍山寺」都對得上 */
 export function normStation(name: string): string {
   return String(name || "")
@@ -68,8 +75,10 @@ async function main() {
   // key 用「城市|站名」：台北和台中都有市政府站，合併會讓驗證器把兩地的路線混在一起
   const stations: Record<
     string,
-    { city: string; lines: string[]; seq: Record<string, number>; en: string; display: string }
+    { city: string; lines: string[]; en: string; display: string }
   > = {};
+  /** 每條線的實際營運路線（含支線），用來建相鄰圖算「搭幾站」 */
+  const routes: Record<string, string[][]> = {};
 
   for (const op of OPERATORS) {
     const res = await fetch(`${BASE}/StationOfLine/${op.id}?%24format=JSON`);
@@ -104,18 +113,39 @@ async function main() {
         if (!zh) continue;
         const key = `${op.city}|${normStation(zh)}`;
         if (!stations[key]) {
-          stations[key] = { city: op.city, lines: [], seq: {}, en: st.StationName?.En ?? "", display: zh };
+          stations[key] = { city: op.city, lines: [], en: st.StationName?.En ?? "", display: zh };
         }
         if (!stations[key].lines.includes(lineKey)) stations[key].lines.push(lineKey);
-        // 站序：用來驗「搭幾站」。同一站在不同線上有不同序號，所以按線存。
-        if (typeof st.Sequence === "number") stations[key].seq[lineKey] = st.Sequence;
         n++;
       }
     }
+    // StationOfRoute 才分得出支線：R-3 是北投↔新北投，只有兩站。
+    // 用 StationOfLine 的 Sequence 相減會算成 7 站 —— 那是把支線接在主線後面的序號。
+    const routeRes = await fetch(`${BASE}/StationOfRoute/${op.id}?%24format=JSON`);
+    if (routeRes.ok) {
+      const seenRoute = new Set<string>();
+      for (const r of (await routeRes.json()) as RawRoute[]) {
+        const rid = r.RouteID ?? "";
+        if (!rid || seenRoute.has(rid)) continue; // 兩個方向是鏡像，留一個就好
+        seenRoute.add(rid);
+        const lineKey = `${op.id}:${r.LineNo ?? r.LineID ?? "?"}`;
+        const names = (r.Stations ?? [])
+          .map((st) => normStation(st.StationName?.Zh_tw ?? ""))
+          .filter(Boolean);
+        if (names.length >= 2) (routes[lineKey] ??= []).push(names);
+      }
+    }
+
     console.log(`  ${op.id.padEnd(7)} ${op.label.padEnd(6)} ${raw.length} 條線 / ${n} 站`);
   }
 
-  const out = { fetchedAt: new Date().toISOString().slice(0, 10), lines, stations, renamed: RENAMED };
+  const out = {
+    fetchedAt: new Date().toISOString().slice(0, 10),
+    lines,
+    stations,
+    routes,
+    renamed: RENAMED,
+  };
   writeFileSync("src/data/metro.json", JSON.stringify(out, null, 1));
   console.log(`\n寫入 src/data/metro.json：${Object.keys(lines).length} 條路線、${Object.keys(stations).length} 個站名`);
 }

@@ -4,7 +4,7 @@ import { config } from "../config.js";
 import { hashKey, TtlCache } from "../lib/cache.js";
 import { checkHours } from "../lib/hours.js";
 import { extractJson } from "../lib/json.js";
-import { checkStopCount, checkTransit } from "../lib/metro.js";
+import { checkTransit, fixStopCounts } from "../lib/metro.js";
 import { allow } from "../lib/rate-limit.js";
 import { MOCK_TRIP_JSON } from "../lib/mock-trip.js";
 import { TripStreamParser } from "../lib/stream-parse.js";
@@ -124,7 +124,10 @@ planRoute.post("/plan/stream", async (c) => {
       if (cached) {
         const auditCached = makeAuditor(form);
         push("meta", { title: cached.title, summary: cached.summary });
-        for (const stop of cached.stops) push("stop", { ...stop, warnings: auditCached(stop) });
+        for (const stop of cached.stops) {
+          const r = auditCached(stop);
+          push("stop", { ...r.stop, warnings: r.warnings, fixes: r.fixes });
+        }
         for (const extra of cached.extras) push("extra", extra);
         push("done", { tips: cached.tips, cached: true, ms: Date.now() - started, verifying: 0 });
         const savedCandidates = verifyCache.get(key);
@@ -144,10 +147,11 @@ planRoute.post("/plan/stream", async (c) => {
       const parser = new TripStreamParser({
         meta: (m) => push("meta", m),
         stop: (s) => {
-          stops.push(s);
-          const warnings = audit(s);
-          if (warnings.length) flagged++;
-          push("stop", { ...s, warnings });
+          const r = audit(s);
+          // 存進快取與匯出的是改過的版本，不然使用者匯出來的還是錯的
+          stops.push(r.stop);
+          if (r.warnings.length) flagged++;
+          push("stop", { ...r.stop, warnings: r.warnings, fixes: r.fixes });
         },
         extra: (x) => {
           extras.push(x);
@@ -311,9 +315,15 @@ function failFromError(c: Context, err: unknown) {
  * 高雄那趟裡「往西子灣方向」出現三段，就跳了三次一模一樣的改名提醒 ——
  * 三次都是真的，但重複三次跟假警告一樣會讓人學會忽略。
  */
-function makeAuditor(form: PlanRequest): (s: Stop) => string[] {
+function makeAuditor(form: PlanRequest): (s: Stop) => { stop: Stop; warnings: string[]; fixes: string[] } {
   const seen = new Set<string>();
-  return (s) => auditStop(s, form).filter((w) => !seen.has(w) && (seen.add(w), true));
+  const fresh = (list: string[]) => list.filter((w) => !seen.has(w) && (seen.add(w), true));
+  return (s) => {
+    // 先改對再檢查：站數改好了就不該再跳那條警告
+    const f = fixStopCounts(s.howTo, form.to, form.lang);
+    const stop = f.notes.length ? { ...s, howTo: f.text } : s;
+    return { stop, warnings: fresh(auditStop(stop, form)), fixes: fresh(f.notes) };
+  };
 }
 
 function auditStop(s: Stop, form: PlanRequest): string[] {
@@ -325,8 +335,6 @@ function auditStop(s: Stop, form: PlanRequest): string[] {
   }
   // 非交通站的 howTo 裡也常夾著捷運路線，一併檢查
   for (const i of checkTransit(text, form.to, form.lang)) out.push(i.text);
-  // 「搭幾站」數錯了，旅客會照著月台跑馬燈數，數到就下車
-  for (const i of checkStopCount(text, form.to, form.lang)) out.push(i.text);
   return out.slice(0, 3);
 }
 

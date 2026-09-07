@@ -312,6 +312,10 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
 .warns .h{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--warn);margin-bottom:5px}
 .warns div.w{font-size:13px;color:var(--warn);line-height:1.55}
 .warns div.w + div.w{margin-top:3px}
+.fixes{margin-top:10px;padding:9px 11px;border-radius:8px;background:var(--good-soft);border-left:3px solid var(--good)}
+.fixes .h{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--good);margin-bottom:5px}
+.fixes div.w{font-size:13px;color:var(--good);line-height:1.55}
+.fixes div.w + div.w{margin-top:3px}
 .checking{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-top:10px}
 
 .book{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line)}
@@ -599,6 +603,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       downloadIcs:"加入行事曆", savedOn:"存於",
       parking:"附近停車",
       warnHead:"這幾點要確認",
+      fixHead:"已依實際路網修正",
       backendOff:"後端未連線"
     },
 
@@ -688,6 +693,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       downloadIcs:"Add to calendar", savedOn:"saved",
       parking:"Parking nearby",
       warnHead:"Worth double-checking",
+      fixHead:"Corrected from the real network",
       backendOff:"Backend offline"
     },
 
@@ -777,6 +783,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       downloadIcs:"Ajouter au calendrier", savedOn:"enregistré le",
       parking:"Stationnement",
       warnHead:"À vérifier",
+      fixHead:"Corrigé selon le réseau réel",
       backendOff:"Serveur hors ligne"
     },
 
@@ -866,6 +873,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       downloadIcs:"カレンダーに追加", savedOn:"保存日",
       parking:"周辺の駐車場",
       warnHead:"要確認",
+      fixHead:"実際の路線網に基づき修正",
       backendOff:"バックエンド未接続"
     }
   };
@@ -1309,6 +1317,12 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
         s.warnings.map(function(w){ return '<div class="w">' + esc(w) + '</div>'; }).join("") + '</div>';
     }
 
+    var fixes = "";
+    if (s.fixes && s.fixes.length){
+      fixes = '<div class="fixes"><div class="h">' + esc(l.fixHead) + '</div>' +
+        s.fixes.map(function(w){ return '<div class="w">' + esc(w) + '</div>'; }).join("") + '</div>';
+    }
+
     var cands = "";
     if (s.kind === "stay"){
       cands = bookingBlock(state.form, s);
@@ -1351,7 +1365,7 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
           '<div class="tags" style="margin-top:6px">' +
             meta.map(function(m){ return '<span class="tag">' + esc(m) + '</span>'; }).join("") + flag +
           '</div>' +
-          rows + warns + notes +
+          rows + fixes + warns + notes +
           (s.kind === "transit" ? "" : mapLinks(s, prev)) + cands +
           '<div class="cfoot"><button type="button" class="mini" data-toggle="' + s.id + '">' +
             esc(s.off ? l.restoreStop : l.removeStop) + '</button></div>' +
@@ -1626,6 +1640,8 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
           s.duration = pch.duration || s.duration;
           if (pch.howTo) s.howTo = pch.howTo;
           s.day = pch.day || s.day;
+          // 重排時後端也會把站數改對，把說明一起帶回卡片上
+          if (pch.fixes && pch.fixes.length) s.fixes = pch.fixes;
         });
         state.edited = false;
         state.replanNote = j.note || "";
