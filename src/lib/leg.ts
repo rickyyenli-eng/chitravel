@@ -1,4 +1,13 @@
-import { cjkOf, citiesForPublic, hopCount, lineOf, normStation, routesOf, stationOf } from "./metro.js";
+import {
+  allCities,
+  cjkOf,
+  citiesForPublic,
+  hopCount,
+  lineOf,
+  normStation,
+  routesOf,
+  stationOf,
+} from "./metro.js";
 import type { Leg } from "../types.js";
 import type { LangCode } from "../types.js";
 import { WARN } from "./warn-text.js";
@@ -24,7 +33,9 @@ export function towardOf(lineKey: string, from: string, to: string): string | un
     if (i === -1 || j === -1 || i === j) continue;
     // 環狀線兩頭都通，說不準方向
     if (r.length > 2 && r[0] === r[r.length - 1]) return undefined;
-    return j > i ? r[r.length - 1] : r[0];
+    // routes 存的是正規化後的名字（台北車站存成台北），顯示要換回官方全名
+    const end = j > i ? r[r.length - 1]! : r[0]!;
+    return stationOf(end, allCities(), true)?.display ?? end;
   }
   return undefined;
 }
@@ -56,8 +67,20 @@ function jaStation(name: string): string {
 function metroText(leg: Leg, lang: LangCode, dest: string, issues: string[], sameAsPrev = false): string {
   const W = WARN[lang];
   const cities = citiesForPublic(dest);
-  const from = stationOf(leg.from, cities);
-  const to = stationOf(leg.to, cities);
+  let from = stationOf(leg.from, cities);
+  let to = stationOf(leg.to, cities);
+
+  // 機場捷運跨桃園與台北，目的地寫「台北」時桃園那頭查不到。
+  // 全國找一次，但要求兩站共用一條線 —— 不然台北與台中都有市政府，會配錯。
+  if (!from || !to) {
+    const wide = allCities();
+    const f2 = stationOf(leg.from, wide, true) ?? from;
+    const t2 = stationOf(leg.to, wide, true) ?? to;
+    if (f2 && t2 && f2.lines.some((l) => t2.lines.includes(l))) {
+      from = f2;
+      to = t2;
+    }
+  }
   let lineKey = lineOf(leg.line, cities);
   // 路線沒填（或填了認不出來），但兩站剛好只共用一條線 —— 那就是它，不用猜
   if (!lineKey && from && to) {

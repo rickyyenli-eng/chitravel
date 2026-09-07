@@ -21,11 +21,32 @@ export function normStation(name: string): string {
     .trim();
 }
 
+/**
+ * 城市的外語寫法。
+ *
+ * 這是今天最嚴重的一個 bug：`citiesFor("Taipei")` 回空陣列，
+ * 於是**所有非中文使用者的捷運驗證整套沒在跑** —— 從做出來那天起。
+ * 而且它是靜靜失效的：沒有警告看起來就像行程完全正確。
+ *
+ * 會漏這麼久是因為我測 checkTransit 時都自己傳中文的「台北」，
+ * 但線上英文使用者的表單 to 欄位填的是 "Taipei"。
+ */
+const CITY_ALIAS: Record<string, string[]> = {
+  台北: ["taipei"],
+  新北: ["new taipei", "xinbei", "shinpei"],
+  高雄: ["kaohsiung", "takao"],
+  台中: ["taichung"],
+  桃園: ["taoyuan"],
+};
+
 function citiesFor(dest: string): string[] {
   const d = String(dest || "");
+  const lower = d.toLowerCase();
   const all = new Set<string>();
   for (const s of Object.values(DB.stations)) all.add(s.city);
-  const hit = [...all].filter((c) => d.includes(c));
+  const hit = [...all].filter(
+    (c) => d.includes(c) || (CITY_ALIAS[c] ?? []).some((a) => lower.includes(a)),
+  );
   // 新北的站跟台北是同一個生活圈，查台北就一起帶進來
   if (hit.includes("台北")) hit.push("新北");
   return hit.length ? [...new Set(hit)] : [];
@@ -531,6 +552,13 @@ export function citiesForPublic(dest: string): string[] {
   return citiesFor(dest);
 }
 
+/** 資料庫裡所有城市，跨縣市路線（機場捷運）要用 */
+export function allCities(): string[] {
+  const all = new Set<string>();
+  for (const st of Object.values(DB.stations)) all.add(st.city);
+  return [...all];
+}
+
 /** 這條線的所有營運路線（每條是照順序的站名陣列） */
 export function routesOf(lineKey: string): string[][] {
   return DB.routes?.[lineKey] ?? [];
@@ -540,30 +568,46 @@ export function routesOf(lineKey: string): string[][] {
 export function stationOf(
   name: string,
   cities: string[],
+  /**
+   * 同名的站把路線併起來。
+   *
+   * 台北車站在資料裡有兩筆：台北捷運那筆（板南線、淡水信義線）與
+   * 桃園機捷那筆（機場捷運）—— 因為兩個系統分屬不同 operator。
+   * 不併的話「機場捷運 機場第二航廈→台北車站」永遠對不起來。
+   * 只在跨縣市查詢時併，並且呼叫端會再要求兩站共用一條線。
+   */
+  merge = false,
 ): { display: string; lines: string[] } | undefined {
-  const direct = lookupStation(name, cities);
+  const direct = lookupStation(name, cities, merge);
   if (direct) return direct;
   // 「Taipei Main Station (台北車站)」這種寫法，把中文挖出來再查一次
   const zh = cjkOf(name);
-  return zh && zh !== name ? lookupStation(zh, cities) : undefined;
+  return zh && zh !== name ? lookupStation(zh, cities, merge) : undefined;
 }
 
 function lookupStation(
   name: string,
   cities: string[],
+  merge: boolean,
 ): { display: string; lines: string[] } | undefined {
   const q = normKey(normStation(name));
   if (!q) return undefined;
+  let exact: { display: string; lines: string[] } | undefined;
   let best: { display: string; lines: string[] } | undefined;
   for (const [, st] of Object.entries(DB.stations)) {
     if (!cities.includes(st.city)) continue;
-    if (normKey(normStation(st.display)) === q) return { display: st.display, lines: st.lines };
+    if (normKey(normStation(st.display)) === q) {
+      if (!exact) exact = { display: st.display, lines: [...st.lines] };
+      else if (merge) for (const l of st.lines) if (!exact.lines.includes(l)) exact.lines.push(l);
+      if (!merge) return exact;
+      continue;
+    }
     // 「台北車站」與「台北」這種包含關係，取最長的那個
     if (q.includes(normKey(normStation(st.display))) && st.display.length >= 2) {
-      if (!best || st.display.length > best.display.length) best = { display: st.display, lines: st.lines };
+      if (!best || st.display.length > best.display.length) best = { display: st.display, lines: [...st.lines] };
     }
   }
-  return best;
+  return exact ?? best;
 }
 
 /**

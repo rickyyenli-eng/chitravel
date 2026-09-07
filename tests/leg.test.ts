@@ -25,7 +25,8 @@ eq(
 eq(
   "高雄那個方向錯的經典案例，現在不可能錯",
   zh([{ mode: "metro", line: "紅線", from: "凱旋", to: "美麗島" }], "高雄"),
-  "從凱旋站搭紅線往岡山方向，4 站到美麗島站",
+  // 終點站的官方名稱是「岡山車站」（PTX），月台方向牌寫的就是這個
+  "從凱旋站搭紅線往岡山車站方向，4 站到美麗島站",
 );
 eq(
   "路線沒填，兩站只共用一條線就自己推",
@@ -80,6 +81,18 @@ eq(
   "算不出站數時也不留孤立逗號",
   renderLegs([{ mode: "metro", line: "板南線", from: "台北101/世貿", to: "國父紀念館", exit: "4" }] as any, "zh-TW", "台北").text,
   "從台北101/世貿站搭板南線，到國父紀念館站，4 號出口",
+);
+
+// 機場捷運跨桃園與台北：目的地寫「台北」時桃園那頭原本查不到
+eq(
+  "跨縣市路線（機場捷運）算得出站數",
+  renderLegs([{ mode: "metro", line: "機場捷運", from: "桃園機場第二航廈站", to: "台北車站", exit: "A1" }] as any, "en", "Taipei").text,
+  "From 機場第二航廈站 take the 機場捷運 toward 台北車站, 12 stops to 台北車站, exit A1",
+);
+eq(
+  "英文目的地也要跑得起路線驗證",
+  renderLegs([{ mode: "metro", line: "板南線", from: "西門站", to: "中正紀念堂站" }] as any, "en", "Taipei").issues.length > 0,
+  true,
 );
 
 console.log(`\n${pass}/${total} 通過`);
