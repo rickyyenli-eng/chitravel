@@ -10,7 +10,7 @@ import { MOCK_TRIP_JSON } from "../lib/mock-trip.js";
 import { TripStreamParser } from "../lib/stream-parse.js";
 import { ask, askStream, estimateCostUsd, LlmError } from "../llm.js";
 import { buildPlanPrompt, SYSTEM_PROMPT } from "../prompt.js";
-import { railPromptBlock } from "../lib/rail.js";
+import { fixTrainTimes, railPromptBlock, type TrainIndex } from "../lib/rail.js";
 import { verifyStop, type Candidate } from "../verify.js";
 import {
   PlanRequestSchema,
@@ -46,10 +46,10 @@ planRoute.post("/plan", async (c) => {
   }
 
   try {
-    const railBlock = await railPromptBlock(form);
+    const rail = await railPromptBlock(form);
     const res = await ask({
       system: SYSTEM_PROMPT,
-      prompt: buildPlanPrompt(form, railBlock),
+      prompt: buildPlanPrompt(form, rail.text),
       maxTokens: 6000 + (form.days - 1) * 4500,
       prefill: "{",
     });
@@ -92,6 +92,9 @@ planRoute.post("/plan/stream", async (c) => {
   const key = hashKey({ form, model: config.plannerModel });
   const cached = cache.get(key);
 
+  // 這一趟查到的真實班次，供事後修正發車／抵達時刻用
+  let trainIndex: TrainIndex = {};
+
   return streamSSE(c, async (sse) => {
     // writeSSE 是非同步的，模型的 callback 卻是同步觸發的，
     // 中間放一個佇列，避免兩邊搶著寫同一條連線。
@@ -122,7 +125,7 @@ planRoute.post("/plan/stream", async (c) => {
 
     try {
       if (cached) {
-        const auditCached = makeAuditor(form);
+        const auditCached = makeAuditor(form, () => trainIndex);
         push("meta", { title: cached.title, summary: cached.summary });
         for (const stop of cached.stops) {
           const r = auditCached(stop);
@@ -142,7 +145,7 @@ planRoute.post("/plan/stream", async (c) => {
 
       const stops: Stop[] = [];
       const extras: Extra[] = [];
-      const audit = makeAuditor(form);
+      const audit = makeAuditor(form, () => trainIndex);
       let flagged = 0;
       const parser = new TripStreamParser({
         meta: (m) => push("meta", m),
@@ -179,11 +182,12 @@ planRoute.post("/plan/stream", async (c) => {
         return;
       }
 
-      // 真實班次要在下 prompt 之前拿到。查不到就是空字串，行程照樣出得來。
-      const railBlock = await railPromptBlock(form);
+      // 真實班次要在下 prompt 之前拿到。查不到就是空的，行程照樣出得來。
+      const rail = await railPromptBlock(form);
+      trainIndex = rail.index;
       const res = await askStream({
         system: SYSTEM_PROMPT,
-        prompt: buildPlanPrompt(form, railBlock),
+        prompt: buildPlanPrompt(form, rail.text),
         // 多天行程要寫的東西多很多，額度不夠會被硬生生截斷
         maxTokens: 6000 + (form.days - 1) * 4500,
         prefill: "{",
@@ -315,7 +319,10 @@ function failFromError(c: Context, err: unknown) {
  * 高雄那趟裡「往西子灣方向」出現三段，就跳了三次一模一樣的改名提醒 ——
  * 三次都是真的，但重複三次跟假警告一樣會讓人學會忽略。
  */
-function makeAuditor(form: PlanRequest): (s: Stop) => { stop: Stop; warnings: string[]; fixes: string[] } {
+function makeAuditor(
+  form: PlanRequest,
+  trains: () => TrainIndex,
+): (s: Stop) => { stop: Stop; warnings: string[]; fixes: string[] } {
   const seen = new Set<string>();
   const fresh = (list: string[]) => list.filter((w) => !seen.has(w) && (seen.add(w), true));
   return (s) => {
@@ -323,8 +330,16 @@ function makeAuditor(form: PlanRequest): (s: Stop) => { stop: Stop; warnings: st
     // 標題的起點站要一起帶進去當上下文：「東門站 → 北投站」的東門
     // 不在 howTo 裡，少了它就配不成對
     const f = fixStopCounts(s.howTo, form.to, form.lang, originOf(s.name));
-    const stop = f.notes.length ? { ...s, howTo: f.text } : s;
-    return { stop, warnings: fresh(auditStop(stop, form)), fixes: fresh(f.notes) };
+    let howTo = f.text;
+    const notes = [...f.notes];
+
+    // 車次的發車與抵達時刻也照真實班表改對 —— 模型會抄對車次卻自己算錯抵達
+    const t = fixTrainTimes(howTo, trains());
+    howTo = t.text;
+    notes.push(...t.notes);
+
+    const stop = notes.length ? { ...s, howTo } : s;
+    return { stop, warnings: fresh(auditStop(stop, form)), fixes: fresh(notes) };
   };
 }
 

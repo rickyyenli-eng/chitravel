@@ -15,7 +15,7 @@
     "models": "tsx scripts/list-models.ts",
     "fetch:metro": "tsx scripts/fetch-metro.ts",
     "fetch:rail": "tsx scripts/fetch-rail.ts",
-    "test": "tsx tests/metro.test.ts && tsx tests/count.test.ts && tsx tests/fix.test.ts && tsx tests/anchor.test.ts && tsx tests/hours.test.ts && tsx tests/rail.test.ts",
+    "test": "tsx tests/metro.test.ts && tsx tests/count.test.ts && tsx tests/fix.test.ts && tsx tests/anchor.test.ts && tsx tests/train-time.test.ts && tsx tests/hours.test.ts && tsx tests/rail.test.ts",
     "test:live": "tsx tests/rail-live.ts"
   },
   "dependencies": {

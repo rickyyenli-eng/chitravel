@@ -359,6 +359,15 @@ function fareText(mode: RailMode, fare?: Fare): string {
  * 查不到的時候什麼都不給，並在規則裡要求它不要寫車次 ——
  * 「搭高鐵北上，約 1 小時」是對的；「搭 0813 車次」如果那班不存在就是害人。
  */
+export type TrainIndex = Record<string, { depart: string; arrive: string }>;
+
+export type RailContext = {
+  /** 塞進 prompt 的文字 */
+  text: string;
+  /** 車次 → 真實發車與抵達時刻，用來事後把模型算錯的時間改對 */
+  index: TrainIndex;
+};
+
 export async function railPromptBlock(f: {
   from: string;
   to: string;
@@ -366,9 +375,10 @@ export async function railPromptBlock(f: {
   start: string;
   days: number;
   transport: string[];
-}): Promise<string> {
+}): Promise<RailContext> {
   const date = parseDate(f.date);
-  if (!date) return "";
+  const index: TrainIndex = {};
+  if (!date) return { text: "", index };
   const modes = modesFor(f.transport);
   const want: RailMode[] = modes.length ? modes : ["thsr", "tra"];
 
@@ -398,13 +408,68 @@ export async function railPromptBlock(f: {
       continue;
     }
 
+    for (const r of [out, back]) {
+      if (!r.ok) continue;
+      for (const t of r.trains) index[t.no] = { depart: t.depart, arrive: t.arrive };
+    }
+
     blocks.push(
       `【${name} ${date} 實際班次 — 這是權威資料，車次與時刻只能從這裡挑】`,
       ...line(mode, out, "去程"),
       ...line(mode, back, `回程 ${backDate}`),
     );
   }
-  if (!blocks.length) return "";
+  if (!blocks.length) return { text: "", index };
   blocks.push("上面沒列到的路段不要自己寫車次，只寫怎麼搭與大約需時。");
-  return blocks.join("\n");
+  return { text: blocks.join("\n"), index };
+}
+
+/**
+ * 把敘述裡的發車／抵達時刻改成真的。
+ *
+ * 線上實測抓到：班表明明寫著「0612 09:00→09:59」，模型抄了車次與發車時間，
+ * 抵達卻自己算成 10:59 —— 整整差一小時，而且它照著錯的時間排了一整天。
+ *
+ * 跟站數同一個道理：有權威資料在手上，就不要只警告，直接改對。
+ * 只在「句子裡剛好提到一個認得的車次」時才動，認不出來一律放過。
+ */
+export function fixTrainTimes(
+  text: string,
+  index: TrainIndex,
+): { text: string; notes: string[] } {
+  if (!text || !Object.keys(index).length) return { text, notes: [] };
+
+  // 車次號碼要跟「車次／班次／列車」這類字連在一起，才不會把時刻或票價當成車次
+  const hits = new Set<string>();
+  const re = /(?:車次|班次|列車)\s*[#No.]*\s*(\d{1,4})|(\d{1,4})\s*(?:車次|班次|次列車)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const raw = (m[1] ?? m[2] ?? "").trim();
+    for (const cand of [raw, raw.padStart(4, "0")]) {
+      if (index[cand]) hits.add(cand);
+    }
+  }
+  // 一句話裡有兩個以上車次就對不出哪個時刻屬於哪班，放過
+  if (hits.size !== 1) return { text, notes: [] };
+
+  const no = [...hits][0]!;
+  const real = index[no]!;
+  const notes: string[] = [];
+  let out = text;
+
+  const swap = (label: "發車" | "抵達", want: string) => {
+    const pat =
+      label === "發車"
+        ? /(\d{1,2}:\d{2})(\s*(?:發車|出發|開))/g
+        : /(\d{1,2}:\d{2})(\s*(?:抵達|到達|抵|到站))/g;
+    out = out.replace(pat, (whole, time: string, tail: string) => {
+      if (time === want) return whole;
+      notes.push(`${no} 車次${label}時間已修正：${time} → ${want}`);
+      return want + tail;
+    });
+  };
+  swap("發車", real.depart);
+  swap("抵達", real.arrive);
+
+  return { text: out, notes: notes.slice(0, 2) };
 }
