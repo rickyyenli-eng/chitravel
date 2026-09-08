@@ -1187,6 +1187,11 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       costUnit: (s && s.costUnit) || "每人",
       verified: (s && s.verified) || "unverified",
       warnings: Array.isArray(s && s.warnings) ? s.warnings : [],
+      // fixes 與 legs 一定要帶進來：
+      // fixes 漏了，綠色的「已依實際路網修正」永遠不會出現（做完後一直沒在畫面上看到，就是這個原因）；
+      // legs 漏了，匯出的檔案就只剩句子，結構化資料整個掉了
+      fixes: Array.isArray(s && s.fixes) ? s.fixes : [],
+      legs: Array.isArray(s && s.legs) ? s.legs : [],
       candidates: null,
       checking: false,
       rainPlan: (s && s.rainPlan) || "",
@@ -1686,7 +1691,8 @@ html[lang="en"] .crow .k,html[lang="fr"] .crow .k{width:92px}
       stops: state.stops.map(function(s){
         return {kind:s.kind, day:s.day, name:s.name, time:s.time, duration:s.duration,
                 howTo:s.howTo, detail:s.detail, hours:s.hours, area:s.area,
-                cost:s.cost, costUnit:s.costUnit, verified:s.verified, warnings:s.warnings,
+                cost:s.cost, costUnit:s.costUnit, verified:s.verified,
+                warnings:s.warnings, fixes:s.fixes, legs:s.legs,
                 rainPlan:s.rainPlan, notes:s.notes, booking:s.booking, off:s.off};
       }),
       extras: state.extras.map(function(x){
