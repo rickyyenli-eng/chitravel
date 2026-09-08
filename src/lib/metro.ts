@@ -109,7 +109,8 @@ function mentionsStation(body: string, display: string): boolean {
   return false;
 }
 
-export type TransitIssue = { text: string };
+/** kind 是給統計用的分類：事後用字串猜分類，跟事後解析句子一樣不可靠 */
+export type TransitIssue = { text: string; kind: "notOnLine" | "needTransfer" | "renamed" };
 
 /**
  * 檢查一段交通敘述裡提到的站，是不是真的在它說的那條線上。
@@ -160,7 +161,7 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
     const asStation =
       text.includes(`${old}站`) || text.includes(`${old}捷運站`) || text.includes(`往${old}`);
     if (asStation && !text.includes(now)) {
-      issues.push({ text: W.renamed(old, now) });
+      issues.push({ text: W.renamed(old, now), kind: "renamed" });
     }
   }
 
@@ -189,7 +190,7 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
       const lineName = DB.lines[lineKey]?.name ?? lineKey;
       for (const s of off) {
         const real = s.lines.map((k) => DB.lines[k]?.name ?? k).join("、");
-        issues.push({ text: W.notOnLine(s.display, lineName, real) });
+        issues.push({ text: W.notOnLine(s.display, lineName, real), kind: "notOnLine" });
       }
     }
   } else if (mentioned.length >= 2) {
@@ -200,7 +201,7 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
       if (!s.lines.some((l) => mentioned.includes(l))) {
         const real = s.lines.map((k) => DB.lines[k]?.name ?? k).join("、");
         const names = mentioned.map((k) => DB.lines[k]?.name ?? k).join("、");
-        issues.push({ text: W.notOnLine(s.display, names, real) });
+        issues.push({ text: W.notOnLine(s.display, names, real), kind: "notOnLine" });
       }
     }
   } else if (!onFoot) {
@@ -208,7 +209,7 @@ export function checkTransit(text: string, dest: string, lang: LangCode = "zh-TW
     // 但走路過去的段落不算 —— 「市政府站步行至松山文創園區」不需要共線。
     const a = uniq[0], b = uniq[uniq.length - 1];
     if (a && b && !a.lines.some((l) => b.lines.includes(l))) {
-      issues.push({ text: W.needTransfer(a.display, b.display) });
+      issues.push({ text: W.needTransfer(a.display, b.display), kind: "needTransfer" });
     }
   }
   return issues.slice(0, 3);
@@ -396,6 +397,7 @@ export function checkStopCount(text: string, dest: string, lang: LangCode = "zh-
     .slice(0, 2)
     .map((h) => ({
       text: W.stopCount(h.from, h.to, DB.lines[h.lineKey]?.name ?? h.lineKey, h.said, h.real),
+      kind: "notOnLine" as const,
     }));
 }
 

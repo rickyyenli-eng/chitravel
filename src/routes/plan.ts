@@ -7,6 +7,7 @@ import { WARN } from "../lib/warn-text.js";
 import { extractJson } from "../lib/json.js";
 import { checkTransit, destOf, fixStopCounts, originOf } from "../lib/metro.js";
 import { renderLegs } from "../lib/leg.js";
+import { buildMetrics, newCounters, record, type Counters } from "../lib/metrics.js";
 import { allow } from "../lib/rate-limit.js";
 import { MOCK_TRIP_JSON } from "../lib/mock-trip.js";
 import { TripStreamParser } from "../lib/stream-parse.js";
@@ -96,6 +97,7 @@ planRoute.post("/plan/stream", async (c) => {
 
   // 這一趟查到的真實班次，供事後修正發車／抵達時刻用
   let trainIndex: TrainIndex = {};
+  const counters = newCounters();
 
   return streamSSE(c, async (sse) => {
     // writeSSE 是非同步的，模型的 callback 卻是同步觸發的，
@@ -131,7 +133,7 @@ planRoute.post("/plan/stream", async (c) => {
         // 「於台北車站搭高鐵 0145 車次」後面的發車時刻會整個消失。
         // 班表本身也有快取，這裡通常是幾百毫秒。
         trainIndex = (await railPromptBlock(form)).index;
-        const auditCached = makeAuditor(form, () => trainIndex);
+        const auditCached = makeAuditor(form, () => trainIndex, counters);
         push("meta", { title: cached.title, summary: cached.summary });
         for (const stop of cached.stops) {
           const r = auditCached(stop);
@@ -145,13 +147,24 @@ planRoute.post("/plan/stream", async (c) => {
             push("verify", { index: Number(index), candidates });
           }
         }
+        // 快取路徑也記一筆，不然統計只看得到花錢的那些，比例會失真
+        record(
+          buildMetrics(form, counters, {
+            stops: cached.stops.length,
+            cached: true,
+            ms: Date.now() - started,
+            tokensIn: 0,
+            tokensOut: 0,
+            usd: 0,
+          }),
+        );
         push("end", {});
         return;
       }
 
       const stops: Stop[] = [];
       const extras: Extra[] = [];
-      const audit = makeAuditor(form, () => trainIndex);
+      const audit = makeAuditor(form, () => trainIndex, counters);
       let flagged = 0;
       const parser = new TripStreamParser({
         meta: (m) => push("meta", m),
@@ -184,6 +197,17 @@ planRoute.post("/plan/stream", async (c) => {
           ms: Date.now() - started,
           verifying: 0,
         });
+        // 模擬模式也記一筆，本機才驗得到統計這條路
+        record(
+          buildMetrics(form, counters, {
+            stops: stops.length,
+            cached: false,
+            ms: Date.now() - started,
+            tokensIn: 0,
+            tokensOut: 0,
+            usd: 0,
+          }),
+        );
         push("end", {});
         return;
       }
@@ -221,7 +245,16 @@ planRoute.post("/plan/stream", async (c) => {
           flagged,
         });
         logPlan(form, trip.data, res, started);
-        if (flagged) console.log(`[audit] ${flagged} 站有疑慮（路線或營業時間）`);
+        record(
+          buildMetrics(form, counters, {
+            stops: trip.data.stops.length,
+            cached: false,
+            ms: Date.now() - started,
+            tokensIn: res.inputTokens,
+            tokensOut: res.outputTokens,
+            usd: estimateCostUsd(res),
+          }),
+        );
       } else if (stops.length > 0) {
         // 已經送出去的那幾站是有效的，別因為收尾解析失敗就把整頁清掉
         push("done", { tips: [], cached: false, ms: Date.now() - started, partial: true, verifying: willVerify });
@@ -328,6 +361,7 @@ function failFromError(c: Context, err: unknown) {
 function makeAuditor(
   form: PlanRequest,
   trains: () => TrainIndex,
+  c: Counters,
 ): (s: Stop) => { stop: Stop; warnings: string[]; fixes: string[] } {
   const seen = new Set<string>();
   const fresh = (list: string[]) => list.filter((w) => !seen.has(w) && (seen.add(w), true));
@@ -335,6 +369,7 @@ function makeAuditor(
   return (s) => {
     // 有 legs 就由我們產生句子：站數、方向、時刻都是算出來的，不用事後解析。
     // 這是站數漏報補了四次之後的結論 —— 從自由文字反推兩站本來就不可靠。
+    if (s.kind === "transit") c.transit++;
     if (s.kind === "transit" && s.legs?.length) {
       const idx = trains();
       const r = renderLegs(s.legs, form.lang, form.to, idx);
@@ -345,11 +380,14 @@ function makeAuditor(
         const no = railLeg?.trainNo?.replace(/[^0-9A-Za-z]/g, "") ?? "";
         const real = idx[no] ?? idx[no.padStart(4, "0")];
 
+        c.withLegs++;
         const stop = { ...s, howTo: r.text, ...(real ? { time: real.depart } : {}) };
-        const warnings = auditStop(stop, form);
+        const warnings = auditStop(stop, form, c);
         warnings.unshift(...r.issues);
+        c.notOnLine += r.issues.length;
         if (real && prev?.time && toMin(prev.time) > toMin(real.depart)) {
           warnings.unshift(WARN[form.lang].missTrain(no, real.depart, prev.time));
+          c.missTrain++;
         }
         prev = stop;
         return { stop, warnings: fresh(warnings).slice(0, 3), fixes: [] };
@@ -369,6 +407,7 @@ function makeAuditor(
     }
     let howTo = f.text;
     const notes = [...f.notes];
+    c.fixStopCount += f.notes.length;
 
     // 車次的發車與抵達時刻也照真實班表改對 —— 模型會抄對車次卻自己算錯抵達
     const t = fixTrainTimes(`${s.name}\n${howTo}`, trains());
@@ -376,6 +415,7 @@ function makeAuditor(
       const nl = t.text.indexOf("\n");
       howTo = t.text.slice(nl + 1);
       notes.push(...t.notes);
+      c.fixTrainTime += t.notes.length;
     }
 
     // 卡片上的時間就是發車時間，跟著改 —— 不然會出現
@@ -384,12 +424,13 @@ function makeAuditor(
     const name = t.notes.length ? t.text.slice(0, Math.max(0, t.text.indexOf("\n"))) : s.name;
 
     const stop = notes.length ? { ...s, name, howTo, time } : s;
-    const warnings = auditStop(stop, form);
+    const warnings = auditStop(stop, form, c);
 
     // 改對之後才看得出來趕不趕得上：上一站排在發車之後就是搭不到
     if (t.depart && prev?.time && toMin(prev.time) > toMin(t.depart)) {
       const no = /(?:車次|班次)\s*(\d{1,4})|(\d{1,4})\s*(?:車次|班次)/.exec(stop.name + stop.howTo);
       warnings.unshift(WARN[form.lang].missTrain(no?.[1] ?? no?.[2] ?? "", t.depart, prev.time));
+      c.missTrain++;
     }
     prev = stop;
 
@@ -402,15 +443,29 @@ function toMin(hhmm: string): number {
   return m ? Number(m[1]) * 60 + Number(m[2]) : -1;
 }
 
-function auditStop(s: Stop, form: PlanRequest): string[] {
+/**
+ * 警告要分類才知道模型「哪一類還常錯」。
+ * 分類在產生的當下標，不要事後用字串去猜 —— 那是今天補了四次洞學到的。
+ */
+function auditStop(s: Stop, form: PlanRequest, c?: Counters): string[] {
   const out: string[] = [];
   const text = s.kind === "transit" ? `${s.name} ${s.howTo}` : s.howTo;
   if (s.kind !== "transit") {
     const h = checkHours(s.time, s.hours, s.duration, form.lang);
-    if (h) out.push(h);
+    if (h) {
+      out.push(h);
+      if (c) c.hours++;
+    }
   }
   // 非交通站的 howTo 裡也常夾著捷運路線，一併檢查
-  for (const i of checkTransit(text, form.to, form.lang)) out.push(i.text);
+  for (const i of checkTransit(text, form.to, form.lang)) {
+    out.push(i.text);
+    if (c) {
+      if (i.kind === "renamed") c.renamed++;
+      else if (i.kind === "needTransfer") c.needTransfer++;
+      else c.notOnLine++;
+    }
+  }
   return out.slice(0, 3);
 }
 
